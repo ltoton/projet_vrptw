@@ -8,14 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Services\Parser.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove="Graph\NewFile1.txt" />
-    <None Remove="Model\Depot.css" />
-    <None Remove="Model\NewFile1.txt" />
-    <None Remove="Model\NewFile2.txt" />
     <None Remove="Services\NewFile1.txt" />
   </ItemGroup>
 
