@@ -1,9 +1,10 @@
 ﻿using VRPTW.Graph;
 
 namespace VRPTW.Model;
-public class Depot: Vertex
-{
-    public int DueTime { get; set; } = 0;
 
-    public int Demand { get; set; } = 0;
+public class Depot : Vertex
+{
+    public int ReadyTime { get; set; } = 0;
+
+    public int DueTime { get; set; } = 0;
 }

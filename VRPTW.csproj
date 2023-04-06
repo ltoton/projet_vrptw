@@ -1,22 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net7.0-windows</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<UseWindowsForms>true</UseWindowsForms>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="Services\Parser.cs" />
-  </ItemGroup>
+	<ItemGroup>
+		<Compile Remove="Services\Parser.cs" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Remove="Graph\NewFile1.txt" />
-    <None Remove="Model\Depot.css" />
-    <None Remove="Model\NewFile1.txt" />
-    <None Remove="Model\NewFile2.txt" />
-    <None Remove="Services\NewFile1.txt" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="Graph\NewFile1.txt" />
+		<None Remove="Model\Depot.css" />
+		<None Remove="Model\NewFile1.txt" />
+		<None Remove="Model\NewFile2.txt" />
+		<None Remove="Services\NewFile1.txt" />
+	</ItemGroup>
 
 </Project>

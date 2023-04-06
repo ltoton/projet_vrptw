@@ -1,6 +1,7 @@
 ﻿using VRPTW.Graph;
 
 namespace VRPTW.Model;
+
 public class Client : Vertex
 {
     public int ReadyTime { get; set; } = 0;

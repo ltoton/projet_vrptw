@@ -1,2 +1,14 @@
-﻿// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+namespace VRPTW;
+
+internal static class Program
+{
+    /// <summary>
+    ///  The main entry point for the application.
+    /// </summary>
+    [STAThread]
+    static void Main()
+    {
+        ApplicationConfiguration.Initialize();
+        Application.Run(new MainForm());
+    }
+}
