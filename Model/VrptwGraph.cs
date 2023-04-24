@@ -43,6 +43,7 @@ public class VrptwGraph
             }
             currentTruck.AddStage(nextClient);
         }
+        newGraph.Trucks.Add(currentTruck);
         return newGraph;
     }
 }
