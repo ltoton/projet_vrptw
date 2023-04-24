@@ -10,6 +10,8 @@ public class Truck
 
     public List<Client> Stages { get; set; } = new();
 
+    public Depot Depot { get; set; } = new();
+
     public void AddStage(Client c, int i = -1)
     {
         if (i >= 0 && Stages.Count > i)
@@ -27,5 +29,11 @@ public class Truck
             Stages.Add(c);
             Content += c.Demand;
         }
+    }
+
+    public void RemoveStage(Client c)
+    {
+        Stages.Remove(c);
+        Content -= c.Demand;
     }
 }

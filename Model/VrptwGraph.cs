@@ -2,9 +2,9 @@
 
 public class VrptwGraph
 {
-    public String name { get; set; } = string.Empty;
-    public String description { get; set; } = string.Empty;
-    public String type { get; set; } = string.Empty;
+    public string name { get; set; } = string.Empty;
+    public string description { get; set; } = string.Empty;
+    public string type { get; set; } = string.Empty;
     public List<Depot> Depots { get; set; } = new();
     public List<Client> Clients { get; set; } = new();
     public List<Truck> Trucks { get; set; } = new();
@@ -28,22 +28,69 @@ public class VrptwGraph
         return (int)Math.Ceiling((double)totalDemand / MaxQuantity);
     }
 
-    public VrptwGraph GenerateInitialSolution()
+    public void GenerateInitialSolution()
     {
-        VrptwGraph newGraph = (VrptwGraph)this.MemberwiseClone();
-        var clientEnumerator = newGraph.Clients.GetEnumerator();
-        Truck currentTruck = new() { Id = 0, Capacity = MaxQuantity };
+        var clientEnumerator = this.Clients.GetEnumerator();
+        Truck currentTruck = new() { Id = 0, Capacity = this.MaxQuantity, Depot = this.Depots[0] };
         while (clientEnumerator.MoveNext())
         {
             Client nextClient = clientEnumerator.Current;
             if (currentTruck.Content + nextClient.Demand > currentTruck.Capacity)
             {
-                newGraph.Trucks.Add(currentTruck);
-                currentTruck = new() { Id = currentTruck.Id + 1, Capacity = MaxQuantity };
+                this.Trucks.Add(currentTruck);
+                currentTruck = new() { Id = currentTruck.Id + 1, Capacity = MaxQuantity, Depot = this.Depots[0] };
             }
             currentTruck.AddStage(nextClient);
         }
-        newGraph.Trucks.Add(currentTruck);
-        return newGraph;
+        this.Trucks.Add(currentTruck);
+    }
+
+    public void Switch(Client client1, Client client2)
+    {
+        Truck? truck1 = this.Trucks.Find((t) => t.Stages.Contains(client1));
+        Truck? truck2 = this.Trucks.Find((t) => t.Stages.Contains(client2));
+        if (truck1 != null && truck2 != null && client1.Id != client2.Id)
+        {
+            int leftPlace1 = truck1.Capacity - client1.Demand;
+            int leftPlace2 = truck2.Capacity - client2.Demand;
+            if (leftPlace1 < client2.Demand || leftPlace2 < client1.Demand)
+            {
+                return;
+            }
+            int i1 = truck1.Stages.IndexOf(client1);
+            int i2 = truck2.Stages.IndexOf(client2);
+            truck1.RemoveStage(client1);
+            truck1.AddStage(client2, i1);
+            truck2.RemoveStage(client2);
+            truck2.AddStage(client1, i2);
+        }
+    }
+
+    public void InsertShift(Client client, Truck destTruck, int pos)
+    {
+        Truck? truck = this.Trucks.Find((t) => t.Stages.Contains(client));
+        if (truck != null)
+        {
+            int leftPlace = destTruck.Capacity - destTruck.Content;
+            if (leftPlace < client.Demand)
+            {
+                return;
+            }
+            truck.RemoveStage(client);
+            destTruck.AddStage(client, pos);
+        }
+    }
+
+    public void Inversion(Truck truck, int start, int end)
+    {
+        for (int i = start; i <= end / 2; i++)
+        {
+            this.Switch(truck.Stages[i], truck.Stages[end - i]);
+        }
+    }
+
+    public void Opt_2()
+    {
+
     }
 }
