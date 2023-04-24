@@ -30,7 +30,7 @@ public class VrptwGraph
 
     public void GenerateInitialSolution()
     {
-        var clientEnumerator = this.Clients.GetEnumerator();
+        var clientEnumerator = this.Clients.OrderBy(a => Guid.NewGuid()).ToList().GetEnumerator();
         Truck currentTruck = new() { Id = 0, Capacity = this.MaxQuantity, Depot = this.Depots[0] };
         while (clientEnumerator.MoveNext())
         {

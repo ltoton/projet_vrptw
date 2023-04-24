@@ -14,7 +14,12 @@ public partial class MainForm : Form
     private void ValidateButton_Click(object sender, EventArgs e)
     {
         this.graph = GraphReader.ReadVrptw($"../../../Src/{this.dataSelect.SelectedValue}");
-        var solution = this.graph.GenerateInitialSolution();
-        Console.WriteLine(solution.Trucks.Count);
+        this.displayWindowGraphics = this.displayPanel.CreateGraphics();
+        displayWindowGraphics.Clear(Color.White);
+
+        this.graph.GenerateInitialSolution();
+        this.DrawGraph(this.graph);
+
+        Console.WriteLine(this.graph.Trucks.Count);
     }
 }
