@@ -2,9 +2,9 @@
 
 public class VrptwGraph
 {
-    public string name { get; set; } = string.Empty;
-    public string description { get; set; } = string.Empty;
-    public string type { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
     public List<Depot> Depots { get; set; } = new();
     public List<Client> Clients { get; set; } = new();
     public List<Truck> Trucks { get; set; } = new();
@@ -89,8 +89,32 @@ public class VrptwGraph
         }
     }
 
-    public void Opt_2()
+    /// <summary>
+    ///     Fais un 2-opt entre les 2 arêtes (start1, start1+1) et (start2, start2+1)
+    /// </summary>
+    public void Opt_2(Client start1, Client start2)
     {
+        Truck? truck1 = this.Trucks.Find((t) => t.Stages.Contains(start1));
+        Truck? truck2 = this.Trucks.Find((t) => t.Stages.Contains(start2));
+        if (truck1 != null && truck2 != null)
+        {
+            int i1 = truck1.Stages.IndexOf(start1);
+            int i2 = truck2.Stages.IndexOf(start2);
+            IEnumerable<Client> toAdd1 = truck1.Stages.Skip(i1);
+            IEnumerable<Client> toAdd2 = truck2.Stages.Skip(i2);
+
+            int leftPlace1 = truck1.Capacity - truck1.Content;
+            int leftPlace2 = truck2.Capacity - truck2.Content;
+
+            if (leftPlace1 >= toAdd1.Select(c => c.Demand).Sum() && leftPlace2 >= toAdd2.Select(c => c.Demand).Sum())
+            {
+                truck1.Stages.RemoveRange(i1, truck1.Stages.Count - i1);
+                truck2.Stages.RemoveRange(i2, truck2.Stages.Count - i2);
+
+                truck1.Stages.AddRange(toAdd1);
+                truck2.Stages.AddRange(toAdd2);
+            }
+        }
 
     }
 }

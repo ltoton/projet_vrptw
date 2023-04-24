@@ -14,19 +14,19 @@ public static class GraphReader
         {
             if (line.StartsWith("NAME"))
             {
-                graph.name = line.Split(':')[1].Trim();
+                graph.Name = line.Split(':')[1].Trim();
                 continue;
             }
 
             if (line.StartsWith("COMMENT"))
             {
-                graph.description = line.Split(':')[1].Trim();
+                graph.Description = line.Split(':')[1].Trim();
                 continue;
             }
 
             if (line.StartsWith("TYPE"))
             {
-                graph.type = line.Split(':')[1].Trim();
+                graph.Type = line.Split(':')[1].Trim();
                 continue;
             }
 
