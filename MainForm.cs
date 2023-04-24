@@ -13,6 +13,8 @@ public partial class MainForm : Form
 
     private void ValidateButton_Click(object sender, EventArgs e)
     {
-        this.graph = GraphReader.ReadVrptw("../../../Src/data101.vrp");
+        this.graph = GraphReader.ReadVrptw($"../../../Src/{this.dataSelect.SelectedValue}");
+        var solution = this.graph.GenerateInitialSolution();
+        Console.WriteLine(solution.Trucks.Count);
     }
 }

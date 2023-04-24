@@ -84,7 +84,7 @@ public static class GraphReader
         depot.Y = int.Parse(data[2]);
         depot.ReadyTime = int.Parse(data[3]);
         depot.DueTime = int.Parse(data[4]);
-        graph.addDepot(depot);
+        graph.AddDepot(depot);
     }
 
     private static void addClient(VrptwGraph graph, string line)
@@ -98,6 +98,6 @@ public static class GraphReader
         client.DueTime = int.Parse(data[4]);
         client.Demand = int.Parse(data[5]);
         client.Service = int.Parse(data[6]);
-        graph.addClient(client);
+        graph.AddClient(client);
     }
 }
