@@ -61,7 +61,7 @@ public class VrptwGraph
         return (int)Math.Sqrt(Math.Pow(client1.X - client2.X, 2) + Math.Pow(client1.Y - client2.Y, 2));
     }
 
-    private int GetTruckDistance(Truck truck)
+    public int GetTruckDistance(Truck truck)
     {
         int distance = 0;
         for (int i = 0; i < truck.Stages.Count - 1; i++)

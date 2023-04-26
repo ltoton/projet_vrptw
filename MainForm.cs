@@ -15,7 +15,10 @@ public partial class MainForm : Form
     {
         this.graph = GraphReader.ReadVrptw($"../../../Src/{this.dataSelect.SelectedValue}");
         this.displayWindowGraphics = this.displayPanel.CreateGraphics();
+        this.truckPanelGraphics = this.panel1.CreateGraphics();
+        this.labelOffsetY = 0;
         displayWindowGraphics.Clear(Color.White);
+        truckPanelGraphics.Clear(this.displayPanel.BackColor);
 
         this.graph.GenerateInitialSolution();
         this.DrawGraph(this.graph);
