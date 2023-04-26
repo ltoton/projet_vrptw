@@ -30,19 +30,38 @@ public class VrptwGraph
 
     public void GenerateInitialSolution()
     {
-        var clientEnumerator = this.Clients.OrderBy(a => Guid.NewGuid()).ToList().GetEnumerator();
+        List<Client> clients = this.Clients.OrderBy(c => c.ReadyTime).ToList();
         Truck currentTruck = new() { Id = 0, Capacity = this.MaxQuantity, Depot = this.Depots[0] };
-        while (clientEnumerator.MoveNext())
+        while (clients.Any())
         {
-            Client nextClient = clientEnumerator.Current;
-            if (currentTruck.Content + nextClient.Demand > currentTruck.Capacity)
+            Client client = clients.First();
+            if (currentTruck.Content + client.Demand > currentTruck.Capacity)
             {
+                Console.WriteLine("Truck " + currentTruck.Id + " is full");
                 this.Trucks.Add(currentTruck);
                 currentTruck = new() { Id = currentTruck.Id + 1, Capacity = MaxQuantity, Depot = this.Depots[0] };
+                clients = clients.OrderBy(c => c.ReadyTime).ToList();
             }
-            currentTruck.AddStage(nextClient);
+            if (currentTruck.Stages.Count == 0 || currentTruck.Stages.Last().DueTime + GetDistance(currentTruck.Stages.Last(), client) >= client.ReadyTime)
+            {
+                Console.WriteLine("Client " + client.Id + " added to truck " + currentTruck.Id);
+                currentTruck.AddStage(client);
+                clients.Remove(client);
+                continue;
+            }
+            else if (currentTruck.Stages.Count > 0)
+            {
+                Console.WriteLine("Client " + client.Id + " reported for next truck");
+                clients.Remove(client);
+                clients.Add(client);
+            }
         }
         this.Trucks.Add(currentTruck);
+    }
+
+    private int GetDistance(Client client1, Client client2)
+    {
+        return (int)Math.Sqrt(Math.Pow(client1.X - client2.X, 2) + Math.Pow(client1.Y - client2.Y, 2));
     }
 
     public void Switch(Client client1, Client client2)
