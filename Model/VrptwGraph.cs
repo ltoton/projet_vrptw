@@ -37,21 +37,18 @@ public class VrptwGraph
             Client client = clients.First();
             if (currentTruck.Content + client.Demand > currentTruck.Capacity)
             {
-                Console.WriteLine("Truck " + currentTruck.Id + " is full");
                 this.Trucks.Add(currentTruck);
                 currentTruck = new() { Id = currentTruck.Id + 1, Capacity = MaxQuantity, Depot = this.Depots[0] };
                 clients = clients.OrderBy(c => c.ReadyTime).ToList();
             }
-            if (currentTruck.Stages.Count == 0 || currentTruck.Stages.Last().DueTime + GetDistance(currentTruck.Stages.Last(), client) >= client.ReadyTime)
+            if (currentTruck.Stages.Count == 0 || currentTruck.Stages.Last().DueTime + GetDistanceBetweenClients(currentTruck.Stages.Last(), client) >= client.ReadyTime)
             {
-                Console.WriteLine("Client " + client.Id + " added to truck " + currentTruck.Id);
                 currentTruck.AddStage(client);
                 clients.Remove(client);
                 continue;
             }
             else if (currentTruck.Stages.Count > 0)
             {
-                Console.WriteLine("Client " + client.Id + " reported for next truck");
                 clients.Remove(client);
                 clients.Add(client);
             }
@@ -59,9 +56,24 @@ public class VrptwGraph
         this.Trucks.Add(currentTruck);
     }
 
-    private int GetDistance(Client client1, Client client2)
+    private int GetDistanceBetweenClients(Client client1, Client client2)
     {
         return (int)Math.Sqrt(Math.Pow(client1.X - client2.X, 2) + Math.Pow(client1.Y - client2.Y, 2));
+    }
+
+    private int GetTruckDistance(Truck truck)
+    {
+        int distance = 0;
+        for (int i = 0; i < truck.Stages.Count - 1; i++)
+        {
+            distance += GetDistanceBetweenClients(truck.Stages[i], truck.Stages[i + 1]);
+        }
+        return distance;
+    }
+
+    public int GetTotalDistance()
+    {
+        return this.Trucks.Select(t => GetTruckDistance(t)).Sum();
     }
 
     public void Switch(Client client1, Client client2)
