@@ -1,10 +1,11 @@
-﻿using VRPTW.Model;
+﻿using System.Drawing.Drawing2D;
+using VRPTW.Model;
 
 namespace VRPTW;
 
 partial class MainForm
 {
-    private const int STANDARD_OBJECT_WIDTH = 4;
+    private const int STANDARD_OBJECT_WIDTH = 3;
     private const int STANDARD_LINE_WIDTH = 1;
     private int scaleFactor = 1;
     private List<Color> colors = new List<Color>();
@@ -56,12 +57,12 @@ partial class MainForm
         }
         this.scaleFactor = this.displayPanel.Width / max;
 
-        // draw the depots
+        // Draw the depots
         foreach (Depot depot in graph.Depots)
         {
             this.DrawDepot(depot);
         }
-        // draw the lines for the trucks and the clients
+        // Draw the lines for the trucks and the clients
         foreach (Truck truck in graph.Trucks)
         {
             this.DrawLineBetweenClient(truck.Stages, truck.Depot);
@@ -101,6 +102,7 @@ partial class MainForm
         }
         this.colors.Add(randomColor);
         Pen linePen = new Pen(randomColor, STANDARD_LINE_WIDTH);
+        linePen.CustomEndCap = new AdjustableArrowCap(5, 5);
         this.displayWindowGraphics.DrawLine(linePen, depot.X * this.scaleFactor, depot.Y * this.scaleFactor, stages[0].X * this.scaleFactor, stages[0].Y * this.scaleFactor);
         for (int i = 0; i < stages.Count - 1; i++)
         {
