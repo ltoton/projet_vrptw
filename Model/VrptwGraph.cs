@@ -60,7 +60,8 @@ public class VrptwGraph
             clients.Remove(client);
             leftClients.Add(client);
         }
-        this.Trucks.Add(currentTruck);
+        if (currentTruck.Stages.Any())
+            this.Trucks.Add(currentTruck);
     }
 
     private int GetDistanceBetweenClients(Client client1, Client client2)
