@@ -68,7 +68,7 @@ partial class MainForm
         foreach (Truck truck in graph.Trucks)
         {
             Color color = this.GetNewRandomColor();
-            this.DrawLineBetweenClient(truck.Stages, truck.Depot, color);
+            this.DrawLineBetweenClient(truck.Stages, truck.Depot, color, truck);
             this.AppendTruckCaption(truck, color);
         }
     }
@@ -109,7 +109,7 @@ partial class MainForm
         this.displayWindowGraphics.DrawEllipse(clientPen, rectangle);
     }
 
-    private void DrawLineBetweenClient(List<Client> stages, Depot depot, Color randomColor)
+    private void DrawLineBetweenClient(List<Client> stages, Depot depot, Color randomColor, Truck truck)
     {
         Pen linePen = new Pen(randomColor, STANDARD_LINE_WIDTH);
         
@@ -124,7 +124,15 @@ partial class MainForm
             stages[0].X * this.scaleFactor, 
             stages[0].Y * this.scaleFactor
             );
-        
+        this.AddCaptionOverLine(
+            depot.X * this.scaleFactor,
+            depot.Y * this.scaleFactor,
+            stages[0].X * this.scaleFactor,
+            stages[0].Y * this.scaleFactor,
+            truck,
+            randomColor
+            );
+
         // Draw each line between the clients and the clients
         for (int i = 0; i < stages.Count - 1; i++)
         {
@@ -135,6 +143,14 @@ partial class MainForm
                 stages[i].Y * this.scaleFactor, 
                 stages[i + 1].X * this.scaleFactor, 
                 stages[i + 1].Y * this.scaleFactor
+                );
+            this.AddCaptionOverLine(
+                stages[i].X * this.scaleFactor,
+                stages[i].Y * this.scaleFactor,
+                stages[i + 1].X * this.scaleFactor,
+                stages[i + 1].Y * this.scaleFactor, 
+                truck, 
+                randomColor
                 );
         }
         // Draw the last client
@@ -148,6 +164,25 @@ partial class MainForm
             stages[stages.Count - 1].X * this.scaleFactor, 
             stages[stages.Count - 1].Y * this.scaleFactor
             );
+        this.AddCaptionOverLine(
+            depot.X * this.scaleFactor,
+            depot.Y * this.scaleFactor,
+            stages[stages.Count - 1].X * this.scaleFactor,
+            stages[stages.Count - 1].Y * this.scaleFactor,
+            truck,
+            randomColor
+            );
+    }
+
+    private void AddCaptionOverLine(int startX, int startY, int finishX, int finishY, Truck truck, Color color)
+    {
+        // Write the id of the truck over the line
+        String truckString = truck.Id.ToString();
+        Font font = new Font("Arial", 8);
+        Brush brush = new SolidBrush(color);
+        // Add an offset of 10 to the Y coordinate to make sure the text is not on the line
+        Point point = new Point((startX + finishX) / 2, (startY + finishY) / 2 - 10);
+        this.displayWindowGraphics.DrawString(truckString, font, brush, point);
     }
 
     private void AppendTruckCaption(Truck truck, Color color)
