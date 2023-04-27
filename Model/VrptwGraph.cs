@@ -63,7 +63,6 @@ public class VrptwGraph
         this.Trucks.Add(currentTruck);
     }
 
-<<<<<<< Updated upstream
     private int GetDistanceBetweenClients(Client client1, Client client2)
     {
         return (int)Math.Sqrt(Math.Pow(client1.X - client2.X, 2) + Math.Pow(client1.Y - client2.Y, 2));
@@ -79,8 +78,6 @@ public class VrptwGraph
         return distance;
     }
 
-=======
->>>>>>> Stashed changes
     public int GetTotalDistance()
     {
         return this.Trucks.Select(t => t.GetDistance()).Sum();
