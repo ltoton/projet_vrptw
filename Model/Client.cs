@@ -2,6 +2,7 @@
 
 namespace VRPTW.Model;
 
+[Serializable]
 public class Client : Vertex
 {
     public int ReadyTime { get; set; } = 0;

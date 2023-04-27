@@ -2,6 +2,7 @@
 
 namespace VRPTW.Model;
 
+[Serializable]
 public class Depot : Vertex
 {
     public int ReadyTime { get; set; } = 0;

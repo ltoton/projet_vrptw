@@ -18,6 +18,7 @@
 		<None Remove="Model\NewFile1.txt" />
 		<None Remove="Model\NewFile2.txt" />
 		<None Remove="Services\NewFile1.txt" />
+		<None Remove="Src\data102 - Copier.vrp" />
 	</ItemGroup>
 
 </Project>
