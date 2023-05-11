@@ -38,6 +38,7 @@ public class Truck
 
     public void RemoveStage(Client c)
     {
+        c = Stages.First((e) => e.Id == c.Id);
         Stages.Remove(c);
         Content -= c.Demand;
     }

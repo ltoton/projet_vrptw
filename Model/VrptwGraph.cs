@@ -1,5 +1,4 @@
-﻿using System;
-using VRPTW.Utils;
+﻿using VRPTW.Utils;
 
 namespace VRPTW.Model;
 
@@ -47,7 +46,6 @@ public class VrptwGraph
             Client? client = clients.FirstOrDefault();
             if (client == default || currentTruck.Content + client.Demand > currentTruck.Capacity)
             {
-                Console.WriteLine($"Truck {currentTruck.Id} is full, going back to depot");
                 this.Trucks.Add(currentTruck);
                 currentTruck = new() { Id = currentTruck.Id + 1, Capacity = MaxQuantity, Depot = this.Depots[0] };
                 clients = clients.Concat(leftClients).OrderBy(c => c.ReadyTime).ToList();
@@ -57,12 +55,10 @@ public class VrptwGraph
             int arrivalTime = currentTruck.GetDistance() + currentTruck.LastStage.GetDistanceWith(client);
             if (arrivalTime <= client.DueTime)
             {
-                Console.WriteLine($"Truck {currentTruck.Id} is going to client {client.Id}");
                 currentTruck.AddStage(client);
                 clients.Remove(client);
                 continue;
             }
-            Console.WriteLine($"Client {client.Id} is ignored by this truck");
             clients.Remove(client);
             leftClients.Add(client);
         }
@@ -92,7 +88,7 @@ public class VrptwGraph
 
     public void Relocate(Client client, Truck truck, int i)
     {
-        Truck? truck1 = this.Trucks.Find((t) => t.Stages.Contains(client));
+        Truck? truck1 = this.Trucks.Find((t) => t.Stages.Any(c => c.Id == client.Id));
         if (truck1 != null)
         {
             int leftPlace = truck.Capacity - truck.Content;
@@ -225,19 +221,24 @@ public class VrptwGraph
                     neighbour = ClassUtils.DeepClone(this);
                     foreach (Truck truck in neighbour.Trucks)
                     {
+                        Console.WriteLine("Truck " + truck.Id + "sur un total de " + neighbour.Trucks.Count);
                         foreach (Client client in neighbour.Clients)
                         {
+                            Console.WriteLine("Client " + client.Id);
                             for (int i = 0; i <= truck.Stages.Count; i++)
                             {
+                                Console.WriteLine("i " + i);
                                 try
                                 {
                                     neighbour.Relocate(client, truck, i);
+                                    Console.WriteLine("Relocate worked");
                                     if (neighbour.IsBetterThan(this))
                                     {
+                                        Console.WriteLine("It's a new neighbour !");
                                         return neighbour;
                                     }
                                 }
-                                catch (InvalidOperationException) { /* do nothing */ }
+                                catch (InvalidOperationException) { /* do nothing */ Console.WriteLine("Relocate didn't worked"); }
                             }
                         }
                     }
@@ -345,11 +346,12 @@ public class VrptwGraph
     {
         neighboursMethods ??= new() { NeighboursMethods.Relocate };
         while (nbGeneration != 0)
-        { 
+        {
             nbGeneration--;
             var neighbour = graph.GetNextNeighbour(neighboursMethods);
             if (neighbour != default)
             {
+                Console.WriteLine("Nouveau voisin trouvé");
                 graph = neighbour;
             }
             else
