@@ -1,4 +1,5 @@
-﻿using VRPTW.Utils;
+﻿using VRPTW.Graph;
+using VRPTW.Utils;
 
 namespace VRPTW.Model;
 
@@ -66,21 +67,6 @@ public class VrptwGraph
             this.Trucks.Add(currentTruck);
     }
 
-    private int GetDistanceBetweenClients(Client client1, Client client2)
-    {
-        return (int)Math.Sqrt(Math.Pow(client1.X - client2.X, 2) + Math.Pow(client1.Y - client2.Y, 2));
-    }
-
-    public int GetTruckDistance(Truck truck)
-    {
-        int distance = 0;
-        for (int i = 0; i < truck.Stages.Count - 1; i++)
-        {
-            distance += GetDistanceBetweenClients(truck.Stages[i], truck.Stages[i + 1]);
-        }
-        return distance;
-    }
-
     public int GetTotalDistance()
     {
         return this.Trucks.Select(t => t.GetDistance()).Sum();
@@ -111,8 +97,8 @@ public class VrptwGraph
         {
             throw new InvalidOperationException();
         }
-        Truck? truck1 = this.Trucks.Find((t) => t.Stages.Contains(client1));
-        Truck? truck2 = this.Trucks.Find((t) => t.Stages.Contains(client2));
+        Truck? truck1 = this.Trucks.Find((t) => t.Stages.Any((c) => c.Id == client1.Id));
+        Truck? truck2 = this.Trucks.Find((t) => t.Stages.Any((c) => c.Id == client1.Id));
         if (truck1 != null && truck2 != null)
         {
             int leftPlace1 = truck1.Capacity - client1.Demand;
@@ -148,6 +134,8 @@ public class VrptwGraph
     /// </summary>
     public void Opt_2(Client start1, Client start2)
     {
+        start1 = this.Clients.First((c) => c.Id == start1.Id);
+        start2 = this.Clients.First((c) => c.Id == start2.Id);
         Truck? truck1 = this.Trucks.Find((t) => t.Stages.Contains(start1));
         Truck? truck2 = this.Trucks.Find((t) => t.Stages.Contains(start2));
         if (truck1 != null && truck2 != null)
@@ -181,6 +169,8 @@ public class VrptwGraph
 
     public void CrossExchange(Client start1, int n1, Client start2, int n2)
     {
+        start1 = this.Clients.First((c) => c.Id == start1.Id);
+        start2 = this.Clients.First((c) => c.Id == start2.Id);
         Truck? truck1 = this.Trucks.Find((t) => t.Stages.Contains(start1));
         Truck? truck2 = this.Trucks.Find((t) => t.Stages.Contains(start2));
         if (truck1 != null && truck2 != null)
@@ -221,24 +211,20 @@ public class VrptwGraph
                     neighbour = ClassUtils.DeepClone(this);
                     foreach (Truck truck in neighbour.Trucks)
                     {
-                        Console.WriteLine("Truck " + truck.Id + "sur un total de " + neighbour.Trucks.Count);
                         foreach (Client client in neighbour.Clients)
                         {
-                            Console.WriteLine("Client " + client.Id);
                             for (int i = 0; i <= truck.Stages.Count; i++)
                             {
-                                Console.WriteLine("i " + i);
                                 try
                                 {
                                     neighbour.Relocate(client, truck, i);
-                                    Console.WriteLine("Relocate worked");
                                     if (neighbour.IsBetterThan(this))
                                     {
-                                        Console.WriteLine("It's a new neighbour !");
+                                        Console.WriteLine("Relocate");
                                         return neighbour;
                                     }
                                 }
-                                catch (InvalidOperationException) { /* do nothing */ Console.WriteLine("Relocate didn't worked"); }
+                                catch (InvalidOperationException) { /* do nothing */ }
                             }
                         }
                     }
@@ -254,6 +240,7 @@ public class VrptwGraph
                                 neighbour.Exchange(client1, client2);
                                 if (neighbour.IsBetterThan(this))
                                 {
+                                    Console.WriteLine("Exchange");
                                     return neighbour;
                                 }
                             }
@@ -274,6 +261,7 @@ public class VrptwGraph
                                     neighbour.Reverse(truck, i, j);
                                     if (neighbour.IsBetterThan(this))
                                     {
+                                        Console.WriteLine("Reverse");
                                         return neighbour;
                                     }
                                 }
@@ -293,6 +281,7 @@ public class VrptwGraph
                                 neighbour.Opt_2(start1, start2);
                                 if (neighbour.IsBetterThan(this))
                                 {
+                                    Console.WriteLine("2-Opt");
                                     return neighbour;
                                 }
                             }
@@ -315,6 +304,7 @@ public class VrptwGraph
                                         neighbour.CrossExchange(start1, i, start2, j);
                                         if (neighbour.IsBetterThan(this))
                                         {
+                                            Console.WriteLine("Cross-Exchange");
                                             return neighbour;
                                         }
                                     }

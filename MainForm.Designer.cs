@@ -175,13 +175,13 @@ partial class MainForm
     private void AppendTruckCaption(Truck truck, Color color)
     {
         // Gets the length of the truck
-        int truckDistance = this.graph.GetTruckDistance(truck);
+        int truckDistance = truck.GetDistance();
 
         // Create a pen and an elipse to draw the truck information, then add it to the truck panel
         Pen pen = new Pen(color, STANDARD_OBJECT_WIDTH);
         Rectangle rectangle = new Rectangle(10, labelOffsetY + 10, STANDARD_OBJECT_WIDTH * 4, STANDARD_OBJECT_WIDTH * 4);
 
-        String truckString = "Truck" + truck.Id + " - Length : " + this.graph.GetTruckDistance(truck);
+        String truckString = "Truck" + truck.Id + " - Length : " + truck.GetDistance();
         Font font = new Font("Arial", 10);
         Brush brush = new SolidBrush(Color.Black);
         Point point = new Point(30, labelOffsetY + 8);

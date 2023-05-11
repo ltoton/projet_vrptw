@@ -45,11 +45,15 @@ public class Truck
 
     public int GetDistance()
     {
+        if (this.Stages.Count == 0)
+            return 0;
+
         int distance = this.Depot.GetDistanceWith(this.Stages.FirstOrDefault());
         for (int i = 0; i < this.Stages.Count - 1; i++)
         {
             distance += this.Stages[i].GetDistanceWith(this.Stages[i + 1]);
         }
+        distance += this.Stages.Last().GetDistanceWith(this.Depot);
         return distance;
     }
 
