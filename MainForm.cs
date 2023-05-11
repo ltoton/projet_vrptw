@@ -16,15 +16,22 @@ public partial class MainForm : Form
         this.graph = GraphReader.ReadVrptw($"../../../Src/{this.dataSelect.SelectedValue}");
         this.displayWindowGraphics = this.displayPanel.CreateGraphics();
         this.truckPanelGraphics = this.panel1.CreateGraphics();
-        this.labelOffsetY = 0;
-        displayWindowGraphics.Clear(Color.White);
-        truckPanelGraphics.Clear(this.displayPanel.BackColor);
+        this.ClearCanvas();
         this.graph.GenerateInitialSolution();
         this.DrawGraph(this.graph);
-        this.graph = VrptwGraph.HillClimbing(graph);
-        this.labelOffsetY = 0;
-        displayWindowGraphics.Clear(Color.White);
-        truckPanelGraphics.Clear(this.displayPanel.BackColor);
+    }
+
+    private void generateOneSolution_Click(object sender, EventArgs e)
+    {
+        this.graph = VrptwGraph.HillClimbing(this.graph, this.GetListOfRelocator(), 1);
+        this.ClearCanvas();
+        this.DrawGraph(this.graph);
+    }
+
+    private void generateNbSolutions_Click(object sender, EventArgs e)
+    {
+        this.graph = VrptwGraph.HillClimbing(this.graph, this.GetListOfRelocator(), Int16.Parse(generationNbInput.Text));
+        this.ClearCanvas();
         this.DrawGraph(this.graph);
     }
 }
