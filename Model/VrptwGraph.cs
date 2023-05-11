@@ -92,24 +92,32 @@ public class VrptwGraph
             int leftPlace = truck.Capacity - truck.Content;
             if (leftPlace < client.Demand)
             {
-                return;
+                throw new InvalidOperationException();
             }
             truck1.RemoveStage(client);
             truck.AddStage(client, i);
+        }
+        else
+        {
+            throw new InvalidOperationException();
         }
     }
 
     public void Exchange(Client client1, Client client2)
     {
+        if (client1.Id == client2.Id)
+        {
+            throw new InvalidOperationException();
+        }
         Truck? truck1 = this.Trucks.Find((t) => t.Stages.Contains(client1));
         Truck? truck2 = this.Trucks.Find((t) => t.Stages.Contains(client2));
-        if (truck1 != null && truck2 != null && client1.Id != client2.Id)
+        if (truck1 != null && truck2 != null)
         {
             int leftPlace1 = truck1.Capacity - client1.Demand;
             int leftPlace2 = truck2.Capacity - client2.Demand;
             if (leftPlace1 < client2.Demand || leftPlace2 < client1.Demand)
             {
-                return;
+                throw new InvalidOperationException();
             }
             int i1 = truck1.Stages.IndexOf(client1);
             int i2 = truck2.Stages.IndexOf(client2);
@@ -117,6 +125,10 @@ public class VrptwGraph
             truck1.AddStage(client2, i1);
             truck2.RemoveStage(client2);
             truck2.AddStage(client1, i2);
+        }
+        else
+        {
+            throw new InvalidOperationException();
         }
     }
 
@@ -154,6 +166,14 @@ public class VrptwGraph
                 truck1.Stages.AddRange(toAdd1);
                 truck2.Stages.AddRange(toAdd2);
             }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+        }
+        else
+        {
+            throw new InvalidOperationException();
         }
     }
 
@@ -176,96 +196,156 @@ public class VrptwGraph
                 truck1.Stages.InsertRange(i1, toAdd2);
                 truck2.Stages.InsertRange(i2, toAdd1);
             }
+            else
+            {
+                throw new InvalidOperationException();
+            }
+        }
+        else
+        {
+            throw new InvalidOperationException();
         }
     }
 
-    private List<VrptwGraph> GetNeighbours(List<NeighboursMethods> methods)
+    public List<VrptwGraph> GetNeighbours(List<NeighboursMethods>? methods = default)
     {
+        methods = methods ?? this.AllNeighboursMethods();
         List<VrptwGraph> neighbours = new List<VrptwGraph>();
+        VrptwGraph neighbour = ClassUtils.DeepClone(this);
         foreach (NeighboursMethods method in methods)
         {
             switch (method)
             {
                 case NeighboursMethods.Relocate:
-                    foreach (Truck truck in this.Trucks)
+                    Console.WriteLine("Relocate");
+                    // Get list of all possible relocate tuples (client, truck, i)
+                    var tuplesRelocate = from client in neighbour.Clients
+                                         from truck in neighbour.Trucks
+                                         from i in Enumerable.Range(0, truck.Stages.Count + 1)
+                                         select (client, truck, i);
+
+                    neighbour = ClassUtils.DeepClone(this);
+                    int u = 0;
+                    foreach (var tuple in tuplesRelocate)
                     {
-                        for (int i = 0; i < truck.Stages.Count; i++)
+                        Console.WriteLine("Tuple " + u + " sur " + tuplesRelocate.Count());
+                        u++;
+                        try
                         {
-                            for (int j = 0; j < this.Trucks.Count; j++)
-                            {
-                                VrptwGraph neighbour = ClassUtils.DeepClone(this);
-                                neighbour.Relocate(truck.Stages[i], neighbour.Trucks[j], i);
-                                neighbours.Add(neighbour);
-                            }
+                            neighbour.Relocate(tuple.client, tuple.truck, tuple.i);
+                            neighbours.Add(neighbour);
                         }
+                        catch (InvalidOperationException) { }
                     }
                     break;
                 case NeighboursMethods.Exchange:
-                    foreach (Truck truck in this.Trucks)
+                    neighbour = ClassUtils.DeepClone(this);
+                    var tuplesExchange = from client1 in neighbour.Clients
+                                         from client2 in neighbour.Clients
+                                         select (client1, client2);
+                    int t = 0;
+                    foreach (var tuple in tuplesExchange)
                     {
-                        for (int i = 0; i < truck.Stages.Count; i++)
+                        Console.WriteLine("Tuple " + t + " sur " + tuplesExchange.Count());
+                        t++;
+                        try
                         {
-                            for (int j = 0; j < this.Trucks.Count; j++)
-                            {
-                                VrptwGraph neighbour = ClassUtils.DeepClone(this);
-                                neighbour.Exchange(truck.Stages[i], neighbour.Trucks[j].Stages[i]);
-                                neighbours.Add(neighbour);
-                            }
+                            neighbour.Exchange(tuple.client1, tuple.client2);
+                            neighbours.Add(neighbour);
                         }
+                        catch (InvalidOperationException) { }
                     }
+
                     break;
                 case NeighboursMethods.Reverse:
-                    foreach (Truck truck in this.Trucks)
+                    neighbour = ClassUtils.DeepClone(this);
+                    foreach (Truck truck in neighbour.Trucks)
                     {
                         for (int i = 0; i < truck.Stages.Count; i++)
                         {
                             for (int j = i; j < truck.Stages.Count; j++)
                             {
-                                VrptwGraph neighbour = ClassUtils.DeepClone(this);
-                                neighbour.Reverse(neighbour.Trucks.Find((t) => t.Stages.Contains(truck.Stages[i])), i, j);
-                                neighbours.Add(neighbour);
+                                try
+                                {
+                                    neighbour.Reverse(truck, i, j);
+                                    neighbours.Add(neighbour);
+                                }
+                                catch (InvalidOperationException) { }
                             }
                         }
                     }
                     break;
                 case NeighboursMethods.Two_Opt:
-                    foreach (Truck truck in this.Trucks)
+                    neighbour = ClassUtils.DeepClone(this);
+                    foreach (Client start1 in neighbour.Clients)
                     {
-                        for (int i = 0; i < truck.Stages.Count; i++)
+                        foreach (Client start2 in neighbour.Clients)
                         {
-                            for (int j = 0; j < this.Trucks.Count; j++)
+                            try
                             {
-                                VrptwGraph neighbour = ClassUtils.DeepClone(this);
-                                neighbour.Opt_2(truck.Stages[i], neighbour.Trucks[j].Stages[i]);
+                                neighbour.Opt_2(start1, start2);
                                 neighbours.Add(neighbour);
                             }
+                            catch (InvalidOperationException) { }
                         }
                     }
                     break;
                 case NeighboursMethods.CrossExchange:
-                    foreach (Truck truck in this.Trucks)
+                    neighbour = ClassUtils.DeepClone(this);
+                    foreach (Client start1 in neighbour.Clients)
                     {
-                        for (int i = 0; i < truck.Stages.Count; i++)
+                        foreach (Client start2 in neighbour.Clients)
                         {
-                            for (int j = 0; j < this.Trucks.Count; j++)
+                            for (int i = 0; i < neighbour.Clients.Count; i++)
                             {
-                                VrptwGraph neighbour = ClassUtils.DeepClone(this);
-                                neighbour.CrossExchange(truck.Stages[i], 1, neighbour.Trucks[j].Stages[i], 1);
-                                neighbours.Add(neighbour);
+                                for (int j = 0; j < neighbour.Clients.Count; j++)
+                                {
+                                    try
+                                    {
+                                        neighbour.CrossExchange(start1, i, start2, j);
+                                        neighbours.Add(neighbour);
+                                    }
+                                    catch (InvalidOperationException) { }
+                                }
                             }
                         }
                     }
                     break;
             }
         }
+        Console.WriteLine(neighbours.Count + " voisins ont été trouvés");
         return neighbours;
+    }
+
+    private List<NeighboursMethods> AllNeighboursMethods()
+    {
+        return new List<NeighboursMethods>() {
+            NeighboursMethods.Relocate,
+            NeighboursMethods.Exchange,
+            NeighboursMethods.Reverse,
+            NeighboursMethods.Two_Opt,
+            NeighboursMethods.CrossExchange
+        };
     }
 
     #region Meta-heuristique
 
-    public void HillClimbing()
+    public static VrptwGraph HillClimbing(VrptwGraph graph)
     {
-
+        while (true)
+        {
+            var neighbours = graph.GetNeighbours(new() { NeighboursMethods.Relocate });
+            var bestNeighbour = neighbours.OrderBy(n => n.GetTotalDistance()).FirstOrDefault();
+            if (bestNeighbour != default && bestNeighbour.GetTotalDistance() < graph.GetTotalDistance())
+            {
+                graph = bestNeighbour;
+            }
+            else
+            {
+                break;
+            }
+        }
+        return graph;
     }
 
     #endregion

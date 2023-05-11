@@ -64,6 +64,7 @@ partial class MainForm
         {
             this.DrawDepot(depot);
         }
+
         // Draw the lines for the trucks and the clients
         foreach (Truck truck in graph.Trucks)
         {
@@ -112,16 +113,16 @@ partial class MainForm
     private void DrawLineBetweenClient(List<Client> stages, Depot depot, Color randomColor, Truck truck)
     {
         Pen linePen = new Pen(randomColor, STANDARD_LINE_WIDTH);
-        
+
         // Ads an arrow to the end of the line
         linePen.CustomEndCap = new AdjustableArrowCap(5, 5);
 
         // Draw the first line from the depot to the first client
         this.displayWindowGraphics.DrawLine(
-            linePen, 
-            depot.X * this.scaleFactor, 
+            linePen,
+            depot.X * this.scaleFactor,
             depot.Y * this.scaleFactor,
-            stages[0].X * this.scaleFactor, 
+            stages[0].X * this.scaleFactor,
             stages[0].Y * this.scaleFactor
             );
         this.AddCaptionOverLine(
@@ -138,10 +139,10 @@ partial class MainForm
         {
             this.DrawClient(stages[i], randomColor);
             this.displayWindowGraphics.DrawLine(
-                linePen, 
-                stages[i].X * this.scaleFactor, 
-                stages[i].Y * this.scaleFactor, 
-                stages[i + 1].X * this.scaleFactor, 
+                linePen,
+                stages[i].X * this.scaleFactor,
+                stages[i].Y * this.scaleFactor,
+                stages[i + 1].X * this.scaleFactor,
                 stages[i + 1].Y * this.scaleFactor
                 );
             this.AddCaptionOverLine(
@@ -158,10 +159,10 @@ partial class MainForm
 
         // Draw the last line from the last client to the depot
         this.displayWindowGraphics.DrawLine(
-            linePen, 
-            depot.X * this.scaleFactor, 
-            depot.Y * this.scaleFactor, 
-            stages[stages.Count - 1].X * this.scaleFactor, 
+            linePen,
+            depot.X * this.scaleFactor,
+            depot.Y * this.scaleFactor,
+            stages[stages.Count - 1].X * this.scaleFactor,
             stages[stages.Count - 1].Y * this.scaleFactor
             );
         this.AddCaptionOverLine(
@@ -193,15 +194,15 @@ partial class MainForm
         // Create a pen and an elipse to draw the truck information, then add it to the truck panel
         Pen pen = new Pen(color, STANDARD_OBJECT_WIDTH);
         Rectangle rectangle = new Rectangle(10, labelOffsetY + 10, STANDARD_OBJECT_WIDTH * 4, STANDARD_OBJECT_WIDTH * 4);
-        
+
         String truckString = "Truck" + truck.Id + " - Length : " + this.graph.GetTruckDistance(truck);
         Font font = new Font("Arial", 10);
         Brush brush = new SolidBrush(Color.Black);
         Point point = new Point(30, labelOffsetY + 8);
-        
+
         this.truckPanelGraphics.DrawString(truckString, font, brush, point);
         this.truckPanelGraphics.DrawEllipse(pen, rectangle);
-        
+
         labelOffsetY += 20;
     }
 
