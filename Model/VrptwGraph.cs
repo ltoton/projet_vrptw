@@ -348,13 +348,11 @@ public class VrptwGraph
 
     #region Meta-heuristique
 
-    public static VrptwGraph HillClimbing(VrptwGraph graph, List<NeighboursMethods>? neighboursMethods = null, int? nbGeneration = null)
+    public static VrptwGraph HillClimbing(VrptwGraph graph)
     {
-        neighboursMethods ??= new() { NeighboursMethods.Relocate };
-        while (nbGeneration != 0)
-        { 
-            nbGeneration--;
-            var neighbour = graph.GetNextNeighbour(neighboursMethods);
+        while (true)
+        {
+            var neighbour = graph.GetNextNeighbour(new() { NeighboursMethods.Relocate });
             if (neighbour != default)
             {
                 graph = neighbour;
