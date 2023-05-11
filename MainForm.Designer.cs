@@ -9,6 +9,7 @@ partial class MainForm
     private const int STANDARD_LINE_WIDTH = 1;
     private int scaleFactor = 1;
     private List<Color> colors = new List<Color>();
+    private Color randomColor;
     private VrptwGraph graph;
     private Graphics displayWindowGraphics;
     private Graphics truckPanelGraphics;
@@ -32,7 +33,7 @@ partial class MainForm
         base.Dispose(disposing);
     }
 
-    private void DrawGraph(VrptwGraph graph)
+    private void DrawGraph(VrptwGraph graph, bool changeColor = true)
     {
         // Set the scale factor according to the max value of clients and depots
         int max = 0;
@@ -70,9 +71,12 @@ partial class MainForm
         this.DrawTotalLength(graph.GetTotalDistance());
         foreach (Truck truck in graph.Trucks)
         {
-            Color color = this.GetNewRandomColor();
-            this.DrawLineBetweenClient(truck.Stages, truck.Depot, color, truck);
-            this.AppendTruckCaption(truck, color);
+            if (changeColor)
+            {
+                this.randomColor = this.GetNewRandomColor();
+            }
+            this.DrawLineBetweenClient(truck.Stages, truck.Depot, truck);
+            this.AppendTruckCaption(truck);
         }
     }
 
@@ -113,9 +117,9 @@ partial class MainForm
         this.displayWindowGraphics.DrawEllipse(clientPen, rectangle);
     }
 
-    private void DrawLineBetweenClient(List<Client> stages, Depot depot, Color randomColor, Truck truck)
+    private void DrawLineBetweenClient(List<Client> stages, Depot depot, Truck truck)
     {
-        Pen linePen = new Pen(randomColor, STANDARD_LINE_WIDTH);
+        Pen linePen = new Pen(this.randomColor, STANDARD_LINE_WIDTH);
 
         // Ads an arrow to the end of the line
         linePen.CustomEndCap = new AdjustableArrowCap(5, 5);
@@ -132,7 +136,7 @@ partial class MainForm
         // Draw each line between the clients and the clients
         for (int i = 0; i < stages.Count - 1; i++)
         {
-            this.DrawClient(stages[i], randomColor);
+            this.DrawClient(stages[i], this.randomColor);
             this.displayWindowGraphics.DrawLine(
                 linePen,
                 stages[i].X * this.scaleFactor,
@@ -142,7 +146,7 @@ partial class MainForm
                 );
         }
         // Draw the last client
-        this.DrawClient(stages[stages.Count - 1], randomColor);
+        this.DrawClient(stages[stages.Count - 1], this.randomColor);
 
         linePen.CustomEndCap = new AdjustableArrowCap(0, 0);
         linePen.CustomStartCap = new AdjustableArrowCap(3, 3);
@@ -167,13 +171,13 @@ partial class MainForm
         this.displayWindowGraphics.DrawString(clientIdString, font, brush, point);
     }
 
-    private void AppendTruckCaption(Truck truck, Color color)
+    private void AppendTruckCaption(Truck truck)
     {
         // Gets the length of the truck
         int truckDistance = this.graph.GetTruckDistance(truck);
 
         // Create a pen and an elipse to draw the truck information, then add it to the truck panel
-        Pen pen = new Pen(color, STANDARD_OBJECT_WIDTH);
+        Pen pen = new Pen(this.randomColor, STANDARD_OBJECT_WIDTH);
         Rectangle rectangle = new Rectangle(10, labelOffsetY + 10, STANDARD_OBJECT_WIDTH * 4, STANDARD_OBJECT_WIDTH * 4);
 
         String truckString = "Truck" + truck.Id + " - Length : " + this.graph.GetTruckDistance(truck);
@@ -319,7 +323,7 @@ partial class MainForm
         // 
         panel1.Location = new Point(830, 213);
         panel1.Name = "panel1";
-        panel1.Size = new Size(194, 370);
+        panel1.Size = new Size(194, 606);
         panel1.TabIndex = 6;
         // 
         // panel2

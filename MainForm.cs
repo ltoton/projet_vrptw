@@ -23,15 +23,23 @@ public partial class MainForm : Form
 
     private void generateOneSolution_Click(object sender, EventArgs e)
     {
+        this.generateOneSolutionButton.Enabled = false;
+        this.generateNbSolutionsButton.Enabled = false;
         this.graph = VrptwGraph.HillClimbing(this.graph, this.GetListOfRelocator(), 1);
         this.ClearCanvas();
-        this.DrawGraph(this.graph);
+        this.DrawGraph(this.graph, false);
+        this.generateNbSolutionsButton.Enabled = true;
+        this.generateOneSolutionButton.Enabled = true;
     }
 
     private void generateNbSolutions_Click(object sender, EventArgs e)
     {
+        this.generateOneSolutionButton.Enabled = false;
+        this.generateNbSolutionsButton.Enabled = false;
         this.graph = VrptwGraph.HillClimbing(this.graph, this.GetListOfRelocator(), Int16.Parse(generationNbInput.Text));
         this.ClearCanvas();
-        this.DrawGraph(this.graph);
+        this.DrawGraph(this.graph, false);
+        this.generateNbSolutionsButton.Enabled = true;
+        this.generateOneSolutionButton.Enabled = true;
     }
 }
