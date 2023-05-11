@@ -13,6 +13,7 @@ partial class MainForm
     private Graphics displayWindowGraphics;
     private Graphics truckPanelGraphics;
     private int labelOffsetY = 0;
+
     /// <summary>
     ///  Required designer variable.
     /// </summary>
@@ -66,6 +67,7 @@ partial class MainForm
         }
 
         // Draw the lines for the trucks and the clients
+        this.DrawTotalLength(graph.GetTotalDistance());
         foreach (Truck truck in graph.Trucks)
         {
             Color color = this.GetNewRandomColor();
@@ -101,6 +103,7 @@ partial class MainForm
 
     private void DrawClient(Client client, Color color)
     {
+        this.AddCaptionOverClient(client, color);
         Pen clientPen = new Pen(color, STANDARD_OBJECT_WIDTH);
         Rectangle rectangle = new Rectangle(
             client.X * this.scaleFactor - STANDARD_OBJECT_WIDTH / 2,
@@ -125,14 +128,6 @@ partial class MainForm
             stages[0].X * this.scaleFactor,
             stages[0].Y * this.scaleFactor
             );
-        this.AddCaptionOverLine(
-            depot.X * this.scaleFactor,
-            depot.Y * this.scaleFactor,
-            stages[0].X * this.scaleFactor,
-            stages[0].Y * this.scaleFactor,
-            truck,
-            randomColor
-            );
 
         // Draw each line between the clients and the clients
         for (int i = 0; i < stages.Count - 1; i++)
@@ -145,18 +140,12 @@ partial class MainForm
                 stages[i + 1].X * this.scaleFactor,
                 stages[i + 1].Y * this.scaleFactor
                 );
-            this.AddCaptionOverLine(
-                stages[i].X * this.scaleFactor,
-                stages[i].Y * this.scaleFactor,
-                stages[i + 1].X * this.scaleFactor,
-                stages[i + 1].Y * this.scaleFactor, 
-                truck, 
-                randomColor
-                );
         }
         // Draw the last client
         this.DrawClient(stages[stages.Count - 1], randomColor);
 
+        linePen.CustomEndCap = new AdjustableArrowCap(0, 0);
+        linePen.CustomStartCap = new AdjustableArrowCap(3, 3);
         // Draw the last line from the last client to the depot
         this.displayWindowGraphics.DrawLine(
             linePen,
@@ -165,25 +154,17 @@ partial class MainForm
             stages[stages.Count - 1].X * this.scaleFactor,
             stages[stages.Count - 1].Y * this.scaleFactor
             );
-        this.AddCaptionOverLine(
-            depot.X * this.scaleFactor,
-            depot.Y * this.scaleFactor,
-            stages[stages.Count - 1].X * this.scaleFactor,
-            stages[stages.Count - 1].Y * this.scaleFactor,
-            truck,
-            randomColor
-            );
     }
 
-    private void AddCaptionOverLine(int startX, int startY, int finishX, int finishY, Truck truck, Color color)
+    private void AddCaptionOverClient(Client client, Color color)
     {
         // Write the id of the truck over the line
-        String truckString = truck.Id.ToString();
+        String clientIdString = client.Id.ToString();
         Font font = new Font("Arial", 8);
         Brush brush = new SolidBrush(color);
         // Add an offset of 10 to the Y coordinate to make sure the text is not on the line
-        Point point = new Point((startX + finishX) / 2, (startY + finishY) / 2 - 10);
-        this.displayWindowGraphics.DrawString(truckString, font, brush, point);
+        Point point = new Point(client.X * this.scaleFactor, client.Y * this.scaleFactor);
+        this.displayWindowGraphics.DrawString(clientIdString, font, brush, point);
     }
 
     private void AppendTruckCaption(Truck truck, Color color)
@@ -206,6 +187,49 @@ partial class MainForm
         labelOffsetY += 20;
     }
 
+    private void DrawTotalLength(double totalDistance)
+    {
+        // Draws the total length of the solution
+        String lengthString = "Total length : " + totalDistance;
+        Font font = new Font("Arial", 10, FontStyle.Bold);
+        Brush brush = new SolidBrush(Color.Black);
+        Point point = new Point(30, labelOffsetY + 8);
+        this.truckPanelGraphics.DrawString(lengthString, font, brush, point);
+        labelOffsetY += 20;
+    }
+
+    private List<NeighboursMethods> GetListOfRelocator()
+    {
+        List<NeighboursMethods> relocators = new List<NeighboursMethods>();
+        if (this.checkboxExchange.Checked)
+        {
+            relocators.Add(NeighboursMethods.Exchange);
+        }
+        if (this.checkboxRelocate.Checked)
+        {
+            relocators.Add(NeighboursMethods.Relocate);
+        }
+        if (this.checkboxReverse.Checked)
+        {
+            relocators.Add(NeighboursMethods.Reverse);
+        }
+        if (this.checkboxTwoOpt.Checked)
+        {
+            relocators.Add(NeighboursMethods.Two_Opt);
+        }
+        if (this.checkboxCrossExchange.Checked)
+        {
+            relocators.Add(NeighboursMethods.CrossExchange);
+        }
+        return relocators;
+    }
+
+    private void ClearCanvas()
+    {
+        this.labelOffsetY = 0;
+        displayWindowGraphics.Clear(Color.White);
+        truckPanelGraphics.Clear(this.displayPanel.BackColor);
+    }
 
     /// <summary>
     ///  Get & set the list of available files
@@ -226,11 +250,22 @@ partial class MainForm
     {
         dataSelect = new ComboBox();
         dataSelectLabel = new Label();
-        ValidateButton = new Button();
+        importGraphButton = new Button();
         displayPanel = new Panel();
         flowLayoutPanel1 = new FlowLayoutPanel();
         panel1 = new Panel();
+        panel2 = new Panel();
+        generateOneSolutionButton = new Button();
+        checkboxCrossExchange = new CheckBox();
+        checkboxExchange = new CheckBox();
+        checkboxReverse = new CheckBox();
+        checkboxRelocate = new CheckBox();
+        checkboxTwoOpt = new CheckBox();
+        label1 = new Label();
+        generationNbInput = new TextBox();
+        generateNbSolutionsButton = new Button();
         flowLayoutPanel1.SuspendLayout();
+        panel2.SuspendLayout();
         SuspendLayout();
         // 
         // dataSelect
@@ -251,16 +286,16 @@ partial class MainForm
         dataSelectLabel.TabIndex = 1;
         dataSelectLabel.Text = "Choix du jeu de données :";
         // 
-        // ValidateButton
+        // importGraphButton
         // 
-        ValidateButton.Location = new Point(3, 44);
-        ValidateButton.Margin = new Padding(3, 2, 3, 2);
-        ValidateButton.Name = "ValidateButton";
-        ValidateButton.Size = new Size(157, 22);
-        ValidateButton.TabIndex = 2;
-        ValidateButton.Text = "Valider";
-        ValidateButton.UseVisualStyleBackColor = true;
-        ValidateButton.Click += ValidateButton_Click;
+        importGraphButton.Location = new Point(3, 44);
+        importGraphButton.Margin = new Padding(3, 2, 3, 2);
+        importGraphButton.Name = "importGraphButton";
+        importGraphButton.Size = new Size(157, 22);
+        importGraphButton.TabIndex = 2;
+        importGraphButton.Text = "Valider";
+        importGraphButton.UseVisualStyleBackColor = true;
+        importGraphButton.Click += ValidateButton_Click;
         // 
         // displayPanel
         // 
@@ -274,7 +309,7 @@ partial class MainForm
         // 
         flowLayoutPanel1.Controls.Add(dataSelectLabel);
         flowLayoutPanel1.Controls.Add(dataSelect);
-        flowLayoutPanel1.Controls.Add(ValidateButton);
+        flowLayoutPanel1.Controls.Add(importGraphButton);
         flowLayoutPanel1.Location = new Point(830, 11);
         flowLayoutPanel1.Name = "flowLayoutPanel1";
         flowLayoutPanel1.Size = new Size(194, 71);
@@ -282,16 +317,122 @@ partial class MainForm
         // 
         // panel1
         // 
-        panel1.Location = new Point(830, 107);
+        panel1.Location = new Point(830, 213);
         panel1.Name = "panel1";
-        panel1.Size = new Size(194, 476);
+        panel1.Size = new Size(194, 370);
         panel1.TabIndex = 6;
+        // 
+        // panel2
+        // 
+        panel2.Controls.Add(generateOneSolutionButton);
+        panel2.Controls.Add(checkboxCrossExchange);
+        panel2.Controls.Add(checkboxExchange);
+        panel2.Controls.Add(checkboxReverse);
+        panel2.Controls.Add(checkboxRelocate);
+        panel2.Controls.Add(checkboxTwoOpt);
+        panel2.Controls.Add(label1);
+        panel2.Controls.Add(generationNbInput);
+        panel2.Controls.Add(generateNbSolutionsButton);
+        panel2.Location = new Point(830, 88);
+        panel2.Name = "panel2";
+        panel2.Size = new Size(194, 119);
+        panel2.TabIndex = 7;
+        // 
+        // generateOneSolutionButton
+        // 
+        generateOneSolutionButton.Location = new Point(3, 93);
+        generateOneSolutionButton.Name = "generateOneSolutionButton";
+        generateOneSolutionButton.Size = new Size(85, 23);
+        generateOneSolutionButton.TabIndex = 8;
+        generateOneSolutionButton.Text = "One step";
+        generateOneSolutionButton.UseVisualStyleBackColor = true;
+        generateOneSolutionButton.Click += generateOneSolution_Click;
+        // 
+        // checkboxCrossExchange
+        // 
+        checkboxCrossExchange.AutoSize = true;
+        checkboxCrossExchange.Location = new Point(94, 43);
+        checkboxCrossExchange.Name = "checkboxCrossExchange";
+        checkboxCrossExchange.Size = new Size(106, 19);
+        checkboxCrossExchange.TabIndex = 7;
+        checkboxCrossExchange.Text = "CrossExchange";
+        checkboxCrossExchange.UseVisualStyleBackColor = true;
+        // 
+        // checkboxExchange
+        // 
+        checkboxExchange.AutoSize = true;
+        checkboxExchange.Location = new Point(94, 18);
+        checkboxExchange.Name = "checkboxExchange";
+        checkboxExchange.Size = new Size(77, 19);
+        checkboxExchange.TabIndex = 6;
+        checkboxExchange.Text = "Exchange";
+        checkboxExchange.UseVisualStyleBackColor = true;
+        // 
+        // checkboxReverse
+        // 
+        checkboxReverse.AutoSize = true;
+        checkboxReverse.Location = new Point(5, 68);
+        checkboxReverse.Name = "checkboxReverse";
+        checkboxReverse.Size = new Size(66, 19);
+        checkboxReverse.TabIndex = 5;
+        checkboxReverse.Text = "Reverse";
+        checkboxReverse.UseVisualStyleBackColor = true;
+        // 
+        // checkboxRelocate
+        // 
+        checkboxRelocate.AutoSize = true;
+        checkboxRelocate.Location = new Point(5, 43);
+        checkboxRelocate.Name = "checkboxRelocate";
+        checkboxRelocate.Size = new Size(71, 19);
+        checkboxRelocate.TabIndex = 4;
+        checkboxRelocate.Text = "Relocate";
+        checkboxRelocate.UseVisualStyleBackColor = true;
+        // 
+        // checkboxTwoOpt
+        // 
+        checkboxTwoOpt.AutoSize = true;
+        checkboxTwoOpt.Checked = true;
+        checkboxTwoOpt.CheckState = CheckState.Checked;
+        checkboxTwoOpt.Location = new Point(5, 18);
+        checkboxTwoOpt.Name = "checkboxTwoOpt";
+        checkboxTwoOpt.Size = new Size(67, 19);
+        checkboxTwoOpt.TabIndex = 3;
+        checkboxTwoOpt.Text = "TwoOpt";
+        checkboxTwoOpt.UseVisualStyleBackColor = true;
+        // 
+        // label1
+        // 
+        label1.AutoSize = true;
+        label1.Location = new Point(3, 0);
+        label1.Name = "label1";
+        label1.Size = new Size(145, 15);
+        label1.TabIndex = 2;
+        label1.Text = "Opérateurs de voisinages :";
+        // 
+        // generationNbInput
+        // 
+        generationNbInput.Location = new Point(94, 66);
+        generationNbInput.Name = "generationNbInput";
+        generationNbInput.Size = new Size(97, 23);
+        generationNbInput.TabIndex = 1;
+        generationNbInput.Text = "10";
+        // 
+        // generateNbSolutionsButton
+        // 
+        generateNbSolutionsButton.Location = new Point(94, 93);
+        generateNbSolutionsButton.Name = "generateNbSolutionsButton";
+        generateNbSolutionsButton.Size = new Size(97, 23);
+        generateNbSolutionsButton.TabIndex = 0;
+        generateNbSolutionsButton.Text = "Generate";
+        generateNbSolutionsButton.UseVisualStyleBackColor = true;
+        generateNbSolutionsButton.Click += generateNbSolutions_Click;
         // 
         // MainForm
         // 
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
         ClientSize = new Size(1034, 831);
+        Controls.Add(panel2);
         Controls.Add(panel1);
         Controls.Add(flowLayoutPanel1);
         Controls.Add(displayPanel);
@@ -300,6 +441,8 @@ partial class MainForm
         Text = "MainForm";
         flowLayoutPanel1.ResumeLayout(false);
         flowLayoutPanel1.PerformLayout();
+        panel2.ResumeLayout(false);
+        panel2.PerformLayout();
         ResumeLayout(false);
     }
 
@@ -307,8 +450,19 @@ partial class MainForm
 
     private ComboBox dataSelect;
     private Label dataSelectLabel;
-    private Button ValidateButton;
+    private Button importGraphButton;
     private Panel displayPanel;
     private FlowLayoutPanel flowLayoutPanel1;
     private Panel panel1;
+    private Panel panel2;
+    private CheckedListBox checkListAgent;
+    private Button generateNbSolutionsButton;
+    private Label label1;
+    private TextBox generationNbInput;
+    private CheckBox checkboxCrossExchange;
+    private CheckBox checkboxExchange;
+    private CheckBox checkboxReverse;
+    private CheckBox checkboxRelocate;
+    private CheckBox checkboxTwoOpt;
+    private Button generateOneSolutionButton;
 }
