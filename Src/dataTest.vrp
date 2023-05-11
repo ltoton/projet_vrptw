@@ -1,5 +1,5 @@
 ﻿NAME: dataTest.vrp
-COMMENT:
+COMMENT: données de test
 TYPE: vrptw
 COORDINATES: cartesian
 NB_DEPOTS: 1
@@ -7,16 +7,14 @@ NB_CLIENTS: 5
 MAX_QUANTITY: 200
 
 DATA_DEPOTS [idName x y readyTime dueTime]:
-d1 35 35 0 230
+d1 25 30 0 200
 
 DATA_CLIENTS [idName x y readyTime dueTime demand service]:
-c1 
-c2
-c3
-c4
-c5
-c6
-c7
-c8
-c9
-c10
+c1 10 10 0 130 1 10
+c2 40 40 0 130 1 10
+c3 10 40 0 130 1 10
+c4 40 10 0 130 1 10
+c5 10 25 0 130 1 10
+c6 25 10 0 130 1 10
+c7 40 25 0 130 1 10
+c8 25 40 0 130 1 10

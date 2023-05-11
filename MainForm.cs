@@ -21,10 +21,10 @@ public partial class MainForm : Form
         truckPanelGraphics.Clear(this.displayPanel.BackColor);
         this.graph.GenerateInitialSolution();
         this.DrawGraph(this.graph);
-        //VrptwGraph.HillClimbing(graph);
-        this.graph.Relocate(this.graph.Clients.First(), this.graph.Trucks.Last(), this.graph.Trucks.Last().Stages.Count + 1);
+        this.graph = VrptwGraph.HillClimbing(graph);
+        this.labelOffsetY = 0;
+        displayWindowGraphics.Clear(Color.White);
+        truckPanelGraphics.Clear(this.displayPanel.BackColor);
         this.DrawGraph(this.graph);
-
-        Console.WriteLine(this.graph.Trucks.Count);
     }
 }

@@ -31,6 +31,11 @@ public class VrptwGraph
         return (int)Math.Ceiling((double)totalDemand / MaxQuantity);
     }
 
+    public bool IsBetterThan(VrptwGraph other)
+    {
+        return this.GetTotalDistance() < other.GetTotalDistance();
+    }
+
     public void GenerateInitialSolution()
     {
         List<Client> clients = this.Clients.OrderBy(c => c.ReadyTime).ToList();
@@ -207,10 +212,9 @@ public class VrptwGraph
         }
     }
 
-    public List<VrptwGraph> GetNeighbours(List<NeighboursMethods>? methods = default)
+    public VrptwGraph? GetNextNeighbour(List<NeighboursMethods>? methods = default)
     {
         methods = methods ?? this.AllNeighboursMethods();
-        List<VrptwGraph> neighbours = new List<VrptwGraph>();
         VrptwGraph neighbour = ClassUtils.DeepClone(this);
         foreach (NeighboursMethods method in methods)
         {
@@ -233,7 +237,10 @@ public class VrptwGraph
                         try
                         {
                             neighbour.Relocate(tuple.client, tuple.truck, tuple.i);
-                            neighbours.Add(neighbour);
+                            if (neighbour.IsBetterThan(this))
+                            {
+                                return neighbour;
+                            }
                         }
                         catch (InvalidOperationException) { }
                     }
@@ -251,7 +258,10 @@ public class VrptwGraph
                         try
                         {
                             neighbour.Exchange(tuple.client1, tuple.client2);
-                            neighbours.Add(neighbour);
+                            if (neighbour.IsBetterThan(this))
+                            {
+                                return neighbour;
+                            }
                         }
                         catch (InvalidOperationException) { }
                     }
@@ -268,7 +278,10 @@ public class VrptwGraph
                                 try
                                 {
                                     neighbour.Reverse(truck, i, j);
-                                    neighbours.Add(neighbour);
+                                    if (neighbour.IsBetterThan(this))
+                                    {
+                                        return neighbour;
+                                    }
                                 }
                                 catch (InvalidOperationException) { }
                             }
@@ -284,7 +297,10 @@ public class VrptwGraph
                             try
                             {
                                 neighbour.Opt_2(start1, start2);
-                                neighbours.Add(neighbour);
+                                if (neighbour.IsBetterThan(this))
+                                {
+                                    return neighbour;
+                                }
                             }
                             catch (InvalidOperationException) { }
                         }
@@ -303,7 +319,10 @@ public class VrptwGraph
                                     try
                                     {
                                         neighbour.CrossExchange(start1, i, start2, j);
-                                        neighbours.Add(neighbour);
+                                        if (neighbour.IsBetterThan(this))
+                                        {
+                                            return neighbour;
+                                        }
                                     }
                                     catch (InvalidOperationException) { }
                                 }
@@ -313,8 +332,7 @@ public class VrptwGraph
                     break;
             }
         }
-        Console.WriteLine(neighbours.Count + " voisins ont été trouvés");
-        return neighbours;
+        return default;
     }
 
     private List<NeighboursMethods> AllNeighboursMethods()
@@ -334,11 +352,10 @@ public class VrptwGraph
     {
         while (true)
         {
-            var neighbours = graph.GetNeighbours(new() { NeighboursMethods.Relocate });
-            var bestNeighbour = neighbours.OrderBy(n => n.GetTotalDistance()).FirstOrDefault();
-            if (bestNeighbour != default && bestNeighbour.GetTotalDistance() < graph.GetTotalDistance())
+            var neighbour = graph.GetNextNeighbour(new() { NeighboursMethods.Relocate });
+            if (neighbour != default)
             {
-                graph = bestNeighbour;
+                graph = neighbour;
             }
             else
             {
