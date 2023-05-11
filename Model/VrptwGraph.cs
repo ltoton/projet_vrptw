@@ -1,4 +1,5 @@
-﻿using VRPTW.Utils;
+﻿using System;
+using VRPTW.Utils;
 
 namespace VRPTW.Model;
 
@@ -221,51 +222,43 @@ public class VrptwGraph
             switch (method)
             {
                 case NeighboursMethods.Relocate:
-                    Console.WriteLine("Relocate");
-                    // Get list of all possible relocate tuples (client, truck, i)
-                    var tuplesRelocate = from client in neighbour.Clients
-                                         from truck in neighbour.Trucks
-                                         from i in Enumerable.Range(0, truck.Stages.Count + 1)
-                                         select (client, truck, i);
-
                     neighbour = ClassUtils.DeepClone(this);
-                    int u = 0;
-                    foreach (var tuple in tuplesRelocate)
+                    foreach (Truck truck in neighbour.Trucks)
                     {
-                        Console.WriteLine("Tuple " + u + " sur " + tuplesRelocate.Count());
-                        u++;
-                        try
+                        foreach (Client client in neighbour.Clients)
                         {
-                            neighbour.Relocate(tuple.client, tuple.truck, tuple.i);
-                            if (neighbour.IsBetterThan(this))
+                            for (int i = 0; i <= truck.Stages.Count; i++)
                             {
-                                return neighbour;
+                                try
+                                {
+                                    neighbour.Relocate(client, truck, i);
+                                    if (neighbour.IsBetterThan(this))
+                                    {
+                                        return neighbour;
+                                    }
+                                }
+                                catch (InvalidOperationException) { /* do nothing */ }
                             }
                         }
-                        catch (InvalidOperationException) { }
                     }
                     break;
                 case NeighboursMethods.Exchange:
                     neighbour = ClassUtils.DeepClone(this);
-                    var tuplesExchange = from client1 in neighbour.Clients
-                                         from client2 in neighbour.Clients
-                                         select (client1, client2);
-                    int t = 0;
-                    foreach (var tuple in tuplesExchange)
+                    foreach (Client client1 in neighbour.Clients)
                     {
-                        Console.WriteLine("Tuple " + t + " sur " + tuplesExchange.Count());
-                        t++;
-                        try
+                        foreach (Client client2 in neighbour.Clients)
                         {
-                            neighbour.Exchange(tuple.client1, tuple.client2);
-                            if (neighbour.IsBetterThan(this))
+                            try
                             {
-                                return neighbour;
+                                neighbour.Exchange(client1, client2);
+                                if (neighbour.IsBetterThan(this))
+                                {
+                                    return neighbour;
+                                }
                             }
+                            catch (InvalidOperationException) { /* do nothing */ }
                         }
-                        catch (InvalidOperationException) { }
                     }
-
                     break;
                 case NeighboursMethods.Reverse:
                     neighbour = ClassUtils.DeepClone(this);
@@ -283,7 +276,7 @@ public class VrptwGraph
                                         return neighbour;
                                     }
                                 }
-                                catch (InvalidOperationException) { }
+                                catch (InvalidOperationException) { /* do nothing */ }
                             }
                         }
                     }
@@ -302,7 +295,7 @@ public class VrptwGraph
                                     return neighbour;
                                 }
                             }
-                            catch (InvalidOperationException) { }
+                            catch (InvalidOperationException) { /* do nothing */ }
                         }
                     }
                     break;
@@ -324,7 +317,7 @@ public class VrptwGraph
                                             return neighbour;
                                         }
                                     }
-                                    catch (InvalidOperationException) { }
+                                    catch (InvalidOperationException) { /* do nothing */ }
                                 }
                             }
                         }
