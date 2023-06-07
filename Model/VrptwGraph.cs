@@ -72,6 +72,23 @@ public class VrptwGraph
         return this.Trucks.Select(t => t.GetDistance()).Sum();
     }
 
+    private static VrptwGraph CheckAndDeleteEmptyTrucks(VrptwGraph graph)
+    {
+        List<Truck> toDelete = new();
+        foreach (Truck truck in graph.Trucks)
+        {
+            if (!truck.Stages.Any())
+            {
+                toDelete.Add(truck);
+            }
+        }
+        foreach (Truck truck in toDelete)
+        {
+            graph.Trucks.Remove(truck);
+        }
+        return graph;
+    }
+
     public void Relocate(Client client, Truck truck, int i)
     {
         Truck? truck1 = this.Trucks.Find((t) => t.Stages.Any(c => c.Id == client.Id));
@@ -342,6 +359,7 @@ public class VrptwGraph
             if (neighbour != default)
             {
                 Console.WriteLine("Nouveau voisin trouvé");
+                neighbour = CheckAndDeleteEmptyTrucks(neighbour);
                 graph = neighbour;
             }
             else
