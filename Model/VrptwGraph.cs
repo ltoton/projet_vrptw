@@ -1,4 +1,5 @@
 ﻿using VRPTW.Graph;
+using VRPTW.Services.Operators;
 using VRPTW.Utils;
 
 namespace VRPTW.Model;
@@ -288,23 +289,7 @@ public class VrptwGraph
                     }
                     break;
                 case NeighboursMethods.Two_Opt:
-                    neighbour = ClassUtils.DeepClone(this);
-                    foreach (Client start1 in neighbour.Clients)
-                    {
-                        foreach (Client start2 in neighbour.Clients)
-                        {
-                            try
-                            {
-                                neighbour.Opt_2(start1, start2);
-                                if (neighbour.IsBetterThan(this))
-                                {
-                                    Console.WriteLine("2-Opt");
-                                    return neighbour;
-                                }
-                            }
-                            catch (InvalidOperationException) { /* do nothing */ }
-                        }
-                    }
+                    neighbour = TwoOptOperator.Calculate(this);
                     break;
                 case NeighboursMethods.CrossExchange:
                     neighbour = ClassUtils.DeepClone(this);
