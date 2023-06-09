@@ -230,27 +230,7 @@ public class VrptwGraph
                 case NeighboursMethods.Exchange:
                     return ExchangeOperator.Calculate(this);
                 case NeighboursMethods.Reverse:
-                    neighbour = ClassUtils.DeepClone(this);
-                    foreach (Truck truck in neighbour.Trucks)
-                    {
-                        for (int i = 0; i < truck.Stages.Count; i++)
-                        {
-                            for (int j = i; j < truck.Stages.Count; j++)
-                            {
-                                try
-                                {
-                                    neighbour.Reverse(truck, i, j);
-                                    if (neighbour.IsBetterThan(this))
-                                    {
-                                        Console.WriteLine("Reverse");
-                                        return neighbour;
-                                    }
-                                }
-                                catch (InvalidOperationException) { /* do nothing */ }
-                            }
-                        }
-                    }
-                    break;
+                    return ReverseOperator.Calculate(this);
                 case NeighboursMethods.Two_Opt:
                     return TwoOptOperator.Calculate(this);
                 case NeighboursMethods.CrossExchange:
