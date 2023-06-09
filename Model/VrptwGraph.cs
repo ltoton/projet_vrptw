@@ -1,4 +1,5 @@
-﻿using VRPTW.Utils;
+﻿using VRPTW.Services;
+using VRPTW.Utils;
 
 namespace VRPTW.Model;
 
@@ -61,18 +62,21 @@ public class VrptwGraph
 
     public int GetTotalDistance()
     {
-        return this.Roads.Select(t =>
+        return this.Roads.Select(GetRoadDistance).Sum();
+    }
+
+    public int GetRoadDistance(List<string> road)
+    {
+        Client? client = this.Clients.Find(c => c.Id == road.First());
+        int s = this.Depots.First().GetDistanceWith(client);
+        for (int i = 0; i < road.Count - 1; i++)
         {
-            int s = this.Depots.First().GetDistanceWith(this.Clients.Find(c => c.Id == t.First()));
-            for (int i = 0; i < t.Count - 1; i++)
-            {
-                Client? c = this.Clients.Find(c => c.Id == t[i]);
-                Client? c2 = this.Clients.Find(c => c.Id == t[i + 1]);
-                s += c.GetDistanceWith(c2);
-            }
-            s += this.Depots.Last().GetDistanceWith(this.Clients.Find(c => c.Id == t.Last()));
-            return s;
-        }).Sum();
+            Client? next = this.Clients.Find(c => c.Id == road[i + 1]);
+            s += client.GetDistanceWith(next);
+            client = next;
+        }
+        s += this.Depots.Last().GetDistanceWith(client);
+        return s;
     }
 
     private static VrptwGraph CheckAndDeleteEmptyRoads(VrptwGraph graph)
@@ -85,11 +89,21 @@ public class VrptwGraph
     {
         methods = methods ?? this.AllNeighboursMethods();
         VrptwGraph neighbour = ClassUtils.DeepClone(this);
-        foreach (NeighboursMethods method in methods)
+        foreach (NeighboursMethods method in methods.OrderBy(m => Guid.NewGuid()))
         {
             switch (method)
             {
-                
+                case NeighboursMethods.Relocate:
+                    neighbour.Relocate("c1", 0, 0);
+                    return neighbour;
+                case NeighboursMethods.Exchange:
+                    return neighbour;
+                case NeighboursMethods.Reverse:
+                    break;
+                case NeighboursMethods.Two_Opt:
+                    return neighbour;
+                case NeighboursMethods.CrossExchange:
+                    break;
             }
         }
         return default;

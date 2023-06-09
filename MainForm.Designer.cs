@@ -81,20 +81,20 @@ partial class MainForm
 
     private void DrawRoad(List<string> road, Color color)
     {
-        foreach(string clientId in road)
+        foreach (string clientId in road)
         {
             Client client = this.graph.Clients.Find(c => c.Id == clientId);
             this.DrawClient(client, color);
         }
         // Draw first line
         this.DrawRoadSegment(graph.Depots[0], this.graph.Clients.Find(c => c.Id == road[0]), color);
-        for (int i = 0; i < road.Count; i ++)
+        for (int i = 0; i < road.Count; i++)
         {
             Client client1 = this.graph.Clients.Find(c => c.Id == road[i]);
             Client client2 = this.graph.Clients.Find(c => c.Id == road[(i + 1) % road.Count]);
             this.DrawRoadSegment(client1, client2, color);
         }
-        this.DrawRoadSegment(this.graph.Clients.Find(c => c.Id == road[road.Count-1]), graph.Depots[0], color, true);
+        this.DrawRoadSegment(this.graph.Clients.Find(c => c.Id == road[road.Count - 1]), graph.Depots[0], color, true);
     }
 
     private void DrawRoadSegment(Vertex client1, Vertex client2, Color color, bool endPen = false)
@@ -123,7 +123,8 @@ partial class MainForm
     private void AppendTruckCaption(int road, Color color)
     {
         // Gets the length of the truck
-        // TODO : Implement length of one road
+        // TODO : Implement length of one road : use the following :
+        // int roadLength = this.graph.GetRoadDistance(road);
 
         // Create a pen and an elipse to draw the truck information, then add it to the truck panel
         Pen pen = new Pen(color, STANDARD_OBJECT_WIDTH);
