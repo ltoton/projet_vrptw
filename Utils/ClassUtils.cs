@@ -6,7 +6,7 @@ namespace VRPTW.Utils
     {
         public static T DeepClone<T>(this T obj)
         {
-            var serialized = JsonSerializer.Serialize<T>(obj);
+            var serialized = JsonSerializer.Serialize(obj);
             return JsonSerializer.Deserialize<T>(serialized) ?? throw new System.Exception("Error while cloning object");
         }
     }

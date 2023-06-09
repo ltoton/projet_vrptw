@@ -85,28 +85,32 @@ public class VrptwGraph
         return graph;
     }
 
-    public VrptwGraph? GetNextNeighbour(List<NeighboursMethods>? methods = default)
+    public List<VrptwGraph> GetNeighbours(int n, List<NeighboursMethods>? methods = default)
     {
         methods = methods ?? this.AllNeighboursMethods();
-        VrptwGraph neighbour = ClassUtils.DeepClone(this);
+        List<VrptwGraph> neighbours = new();
         foreach (NeighboursMethods method in methods.OrderBy(m => Guid.NewGuid()))
         {
             switch (method)
             {
                 case NeighboursMethods.Relocate:
-                    neighbour.Relocate("c1", 0, 0);
-                    return neighbour;
+                    neighbours.AddRange(this.GetRelocateNeighbours(n / methods.Count));
+                    break;
                 case NeighboursMethods.Exchange:
-                    return neighbour;
+                    neighbours.AddRange(this.GetExchangeNeighbours(n / methods.Count));
+                    break;
                 case NeighboursMethods.Reverse:
+                    neighbours.AddRange(this.GetReverseNeighbours(n / methods.Count));
                     break;
                 case NeighboursMethods.Two_Opt:
-                    return neighbour;
+                    neighbours.AddRange(this.GetTwoOptNeighbours(n / methods.Count));
+                    break;
                 case NeighboursMethods.CrossExchange:
+                    neighbours.AddRange(this.GetCrossExchangeNeighbours(n / methods.Count));
                     break;
             }
         }
-        return default;
+        return neighbours;
     }
 
     private List<NeighboursMethods> AllNeighboursMethods()
@@ -120,6 +124,11 @@ public class VrptwGraph
         };
     }
 
+    public static VrptwGraph GetBest(List<VrptwGraph> graphs)
+    {
+        return graphs.OrderBy(g => g.GetTotalDistance()).First();
+    }
+
     #region Meta-heuristique
 
     public static VrptwGraph HillClimbing(VrptwGraph graph, List<NeighboursMethods>? neighboursMethods = null, int? nbGeneration = null)
@@ -128,12 +137,10 @@ public class VrptwGraph
         while (nbGeneration != 0)
         {
             nbGeneration--;
-            var neighbour = graph.GetNextNeighbour(neighboursMethods);
-            if (neighbour != default)
+            var neighbours = graph.GetNeighbours(20, neighboursMethods);
+            if (neighbours.Count > 0)
             {
-                Console.WriteLine("Nouveau voisin trouvé");
-                neighbour = CheckAndDeleteEmptyRoads(neighbour);
-                graph = neighbour;
+                graph = CheckAndDeleteEmptyRoads(GetBest(neighbours));
             }
             else
             {
