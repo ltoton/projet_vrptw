@@ -226,46 +226,9 @@ public class VrptwGraph
             switch (method)
             {
                 case NeighboursMethods.Relocate:
-                    neighbour = ClassUtils.DeepClone(this);
-                    foreach (Truck truck in neighbour.Trucks)
-                    {
-                        foreach (Client client in neighbour.Clients)
-                        {
-                            for (int i = 0; i <= truck.Stages.Count; i++)
-                            {
-                                try
-                                {
-                                    neighbour.Relocate(client, truck, i);
-                                    if (neighbour.IsBetterThan(this))
-                                    {
-                                        Console.WriteLine("Relocate");
-                                        return neighbour;
-                                    }
-                                }
-                                catch (InvalidOperationException) { /* do nothing */ }
-                            }
-                        }
-                    }
-                    break;
+                    return RelocateOperator.Calculate(this);
                 case NeighboursMethods.Exchange:
-                    neighbour = ClassUtils.DeepClone(this);
-                    foreach (Client client1 in neighbour.Clients)
-                    {
-                        foreach (Client client2 in neighbour.Clients)
-                        {
-                            try
-                            {
-                                neighbour.Exchange(client1, client2);
-                                if (neighbour.IsBetterThan(this))
-                                {
-                                    Console.WriteLine("Exchange");
-                                    return neighbour;
-                                }
-                            }
-                            catch (InvalidOperationException) { /* do nothing */ }
-                        }
-                    }
-                    break;
+                    return ExchangeOperator.Calculate(this);
                 case NeighboursMethods.Reverse:
                     neighbour = ClassUtils.DeepClone(this);
                     foreach (Truck truck in neighbour.Trucks)
@@ -289,8 +252,7 @@ public class VrptwGraph
                     }
                     break;
                 case NeighboursMethods.Two_Opt:
-                    neighbour = TwoOptOperator.Calculate(this);
-                    break;
+                    return TwoOptOperator.Calculate(this);
                 case NeighboursMethods.CrossExchange:
                     neighbour = ClassUtils.DeepClone(this);
                     foreach (Client start1 in neighbour.Clients)
