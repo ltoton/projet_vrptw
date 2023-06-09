@@ -1,4 +1,5 @@
 ﻿using System.Drawing.Drawing2D;
+using VRPTW.Graph;
 using VRPTW.Model;
 
 namespace VRPTW;
@@ -33,7 +34,7 @@ partial class MainForm
         base.Dispose(disposing);
     }
 
-    private void DrawGraph(VrptwGraph graph, bool changeColor = true)
+    private void DrawGraph(VrptwGraph graph)
     {
         // Set the scale factor according to the max value of clients and depots
         int max = 0;
@@ -67,18 +68,76 @@ partial class MainForm
             this.DrawDepot(depot);
         }
 
-        // Draw the lines for the trucks and the clients
-        this.DrawTotalLength(graph.GetTotalDistance());
-        foreach (Truck truck in graph.Trucks)
+        // Draw the roads
+        int i = 0;
+        foreach (List<string> road in graph.Roads)
         {
-            if (changeColor)
-            {
-                this.colorDictionary.Remove(truck.Id);
-                this.colorDictionary.Add(truck.Id, this.GetNewRandomColor());
-            }
-            this.DrawLineBetweenClient(truck.Stages, truck.Depot, truck, this.colorDictionary.GetValueOrDefault(truck.Id));
-            this.AppendTruckCaption(truck, this.colorDictionary.GetValueOrDefault(truck.Id));
+            Color color = this.GetNewRandomColor();
+            this.DrawRoad(road, color);
+            this.AppendTruckCaption(i, color);
+            i++;
         }
+    }
+
+    private void DrawRoad(List<string> road, Color color)
+    {
+        foreach(string clientId in road)
+        {
+            Client client = this.graph.Clients.Find(c => c.Id == clientId);
+            this.DrawClient(client, color);
+        }
+        // Draw first line
+        this.DrawRoadSegment(graph.Depots[0], this.graph.Clients.Find(c => c.Id == road[0]), color);
+        for (int i = 0; i < road.Count; i ++)
+        {
+            Client client1 = this.graph.Clients.Find(c => c.Id == road[i]);
+            Client client2 = this.graph.Clients.Find(c => c.Id == road[(i + 1) % road.Count]);
+            this.DrawRoadSegment(client1, client2, color);
+        }
+        this.DrawRoadSegment(graph.Depots[0], this.graph.Clients.Find(c => c.Id == road[road.Count-1]), color, true);
+    }
+
+    private void DrawRoadSegment(Vertex client1, Vertex client2, Color color, bool endPen = false)
+    {
+        Pen pen = new Pen(color, STANDARD_LINE_WIDTH);
+        pen.CustomEndCap = endPen ? new AdjustableArrowCap(3,3) : new AdjustableArrowCap(5, 5);
+        this.displayWindowGraphics.DrawLine(
+            pen,
+            client1.X * this.scaleFactor,
+            client1.Y * this.scaleFactor,
+            client2.X * this.scaleFactor,
+            client2.Y * this.scaleFactor);
+    }
+
+    private void DrawClient(Client client, Color color)
+    {
+        Pen pen = new Pen(color, STANDARD_OBJECT_WIDTH);
+        Rectangle rectangle = new Rectangle(
+            client.X * this.scaleFactor - STANDARD_OBJECT_WIDTH / 2,
+            client.Y * this.scaleFactor - STANDARD_OBJECT_WIDTH / 2,
+            STANDARD_OBJECT_WIDTH,
+            STANDARD_OBJECT_WIDTH);
+        this.displayWindowGraphics.DrawEllipse(pen, rectangle);
+    }
+
+    private void AppendTruckCaption(int road, Color color)
+    {
+        // Gets the length of the truck
+        // TODO : Implement length of one road
+
+        // Create a pen and an elipse to draw the truck information, then add it to the truck panel
+        Pen pen = new Pen(color, STANDARD_OBJECT_WIDTH);
+        Rectangle rectangle = new Rectangle(10, labelOffsetY + 10, STANDARD_OBJECT_WIDTH * 4, STANDARD_OBJECT_WIDTH * 4);
+
+        String truckString = "Truck" + road + " - Length : TODO";
+        Font font = new Font("Arial", 10);
+        Brush brush = new SolidBrush(Color.Black);
+        Point point = new Point(30, labelOffsetY + 8);
+
+        this.truckPanelGraphics.DrawString(truckString, font, brush, point);
+        this.truckPanelGraphics.DrawEllipse(pen, rectangle);
+
+        labelOffsetY += 20;
     }
 
     private Color GetNewRandomColor()
@@ -104,92 +163,6 @@ partial class MainForm
             STANDARD_OBJECT_WIDTH * 2,
             STANDARD_OBJECT_WIDTH * 2);
         this.displayWindowGraphics.DrawEllipse(depotPen, rectangle);
-    }
-
-    private void DrawClient(Client client, Color color)
-    {
-        this.AddCaptionOverClient(client, color);
-        Pen clientPen = new Pen(color, STANDARD_OBJECT_WIDTH);
-        Rectangle rectangle = new Rectangle(
-            client.X * this.scaleFactor - STANDARD_OBJECT_WIDTH / 2,
-            client.Y * this.scaleFactor - STANDARD_OBJECT_WIDTH / 2,
-            STANDARD_OBJECT_WIDTH,
-            STANDARD_OBJECT_WIDTH);
-        this.displayWindowGraphics.DrawEllipse(clientPen, rectangle);
-    }
-
-    private void DrawLineBetweenClient(List<Client> stages, Depot depot, Truck truck, Color color)
-    {
-        Pen linePen = new Pen(color, STANDARD_LINE_WIDTH);
-
-        // Ads an arrow to the end of the line
-        linePen.CustomEndCap = new AdjustableArrowCap(5, 5);
-
-        // Draw the first line from the depot to the first client
-        this.displayWindowGraphics.DrawLine(
-            linePen,
-            depot.X * this.scaleFactor,
-            depot.Y * this.scaleFactor,
-            stages[0].X * this.scaleFactor,
-            stages[0].Y * this.scaleFactor
-            );
-
-        // Draw each line between the clients and the clients
-        for (int i = 0; i < stages.Count - 1; i++)
-        {
-            this.DrawClient(stages[i], color);
-            this.displayWindowGraphics.DrawLine(
-                linePen,
-                stages[i].X * this.scaleFactor,
-                stages[i].Y * this.scaleFactor,
-                stages[i + 1].X * this.scaleFactor,
-                stages[i + 1].Y * this.scaleFactor
-                );
-        }
-        // Draw the last client
-        this.DrawClient(stages[stages.Count - 1], color);
-
-        linePen.CustomEndCap = new AdjustableArrowCap(0, 0);
-        linePen.CustomStartCap = new AdjustableArrowCap(3, 3);
-        // Draw the last line from the last client to the depot
-        this.displayWindowGraphics.DrawLine(
-            linePen,
-            depot.X * this.scaleFactor,
-            depot.Y * this.scaleFactor,
-            stages[stages.Count - 1].X * this.scaleFactor,
-            stages[stages.Count - 1].Y * this.scaleFactor
-            );
-    }
-
-    private void AddCaptionOverClient(Client client, Color color)
-    {
-        // Write the id of the truck over the line
-        String clientIdString = client.Id.ToString();
-        Font font = new Font("Arial", 8);
-        Brush brush = new SolidBrush(color);
-        // Add an offset of 10 to the Y coordinate to make sure the text is not on the line
-        Point point = new Point(client.X * this.scaleFactor, client.Y * this.scaleFactor);
-        this.displayWindowGraphics.DrawString(clientIdString, font, brush, point);
-    }
-
-    private void AppendTruckCaption(Truck truck, Color color)
-    {
-        // Gets the length of the truck
-        int truckDistance = truck.GetDistance();
-
-        // Create a pen and an elipse to draw the truck information, then add it to the truck panel
-        Pen pen = new Pen(color, STANDARD_OBJECT_WIDTH);
-        Rectangle rectangle = new Rectangle(10, labelOffsetY + 10, STANDARD_OBJECT_WIDTH * 4, STANDARD_OBJECT_WIDTH * 4);
-
-        String truckString = "Truck" + truck.Id + " - Length : " + truck.GetDistance();
-        Font font = new Font("Arial", 10);
-        Brush brush = new SolidBrush(Color.Black);
-        Point point = new Point(30, labelOffsetY + 8);
-
-        this.truckPanelGraphics.DrawString(truckString, font, brush, point);
-        this.truckPanelGraphics.DrawEllipse(pen, rectangle);
-
-        labelOffsetY += 20;
     }
 
     private void DrawTotalLength(double totalDistance)

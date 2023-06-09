@@ -1,5 +1,4 @@
-﻿using VRPTW.Services.Operators;
-using VRPTW.Utils;
+﻿using VRPTW.Utils;
 
 namespace VRPTW.Model;
 
@@ -90,16 +89,7 @@ public class VrptwGraph
         {
             switch (method)
             {
-                case NeighboursMethods.Relocate:
-                    return RelocateOperator.Calculate(this);
-                case NeighboursMethods.Exchange:
-                    return ExchangeOperator.Calculate(this);
-                case NeighboursMethods.Reverse:
-                    break;
-                case NeighboursMethods.Two_Opt:
-                    return TwoOptOperator.Calculate(this);
-                case NeighboursMethods.CrossExchange:
-                    break;
+                
             }
         }
         return default;
