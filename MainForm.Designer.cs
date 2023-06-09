@@ -94,13 +94,13 @@ partial class MainForm
             Client client2 = this.graph.Clients.Find(c => c.Id == road[(i + 1) % road.Count]);
             this.DrawRoadSegment(client1, client2, color);
         }
-        this.DrawRoadSegment(graph.Depots[0], this.graph.Clients.Find(c => c.Id == road[road.Count-1]), color, true);
+        this.DrawRoadSegment(this.graph.Clients.Find(c => c.Id == road[road.Count-1]), graph.Depots[0], color, true);
     }
 
     private void DrawRoadSegment(Vertex client1, Vertex client2, Color color, bool endPen = false)
     {
         Pen pen = new Pen(color, STANDARD_LINE_WIDTH);
-        pen.CustomEndCap = endPen ? new AdjustableArrowCap(3,3) : new AdjustableArrowCap(5, 5);
+        pen.CustomEndCap = endPen ? new AdjustableArrowCap(4, 4) : new AdjustableArrowCap(5, 5);
         this.displayWindowGraphics.DrawLine(
             pen,
             client1.X * this.scaleFactor,
