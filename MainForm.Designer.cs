@@ -34,7 +34,7 @@ partial class MainForm
         base.Dispose(disposing);
     }
 
-    private void DrawGraph(VrptwGraph graph)
+    private void DrawGraph(VrptwGraph graph, bool changeColors = false)
     {
         // Set the scale factor according to the max value of clients and depots
         int max = 0;
@@ -68,13 +68,29 @@ partial class MainForm
             this.DrawDepot(depot);
         }
 
+        this.DrawTotalLength(graph.GetTotalDistance());
         // Draw the roads
         int i = 0;
+        if (changeColors)
+        {
+            if (colorDictionary.Count != 0)
+            {
+                colorDictionary.Clear();
+            }
+            foreach (List<string> road in graph.Roads)
+            {
+                Color color = this.GetNewRandomColor();
+                colorDictionary.Add(i, color);
+                i++;
+            }
+        }
+
+        i = 0;
         foreach (List<string> road in graph.Roads)
         {
-            Color color = this.GetNewRandomColor();
+            Color color = colorDictionary[graph.Roads.IndexOf(road)];
             this.DrawRoad(road, color);
-            this.AppendTruckCaption(i, color);
+            this.AppendRoadCaption(i, color, road);
             i++;
         }
     }
@@ -87,12 +103,17 @@ partial class MainForm
             this.DrawClient(client, color);
         }
         // Draw first line
-        this.DrawRoadSegment(graph.Depots[0], this.graph.Clients.Find(c => c.Id == road[0]), color);
-        for (int i = 0; i < road.Count; i++)
+        // this.DrawRoadSegment(graph.Depots[0], graph.Clients[0], color);
+        for (int i = 0, n = road.Count; i < n; i++)
         {
-            Client client1 = this.graph.Clients.Find(c => c.Id == road[i]);
-            Client client2 = this.graph.Clients.Find(c => c.Id == road[(i + 1) % road.Count]);
-            this.DrawRoadSegment(client1, client2, color);
+            if (i == 0)
+            {
+                this.DrawRoadSegment(this.graph.Depots[0], this.graph.Clients.Find(c => c.Id == road[i]), color);
+            }
+            else
+            {
+                this.DrawRoadSegment(this.graph.Clients.Find(c => c.Id == road[i - 1]), this.graph.Clients.Find(c => c.Id == road[i]), color);
+            }
         }
         this.DrawRoadSegment(this.graph.Clients.Find(c => c.Id == road[road.Count - 1]), graph.Depots[0], color, true);
     }
@@ -120,17 +141,17 @@ partial class MainForm
         this.displayWindowGraphics.DrawEllipse(pen, rectangle);
     }
 
-    private void AppendTruckCaption(int road, Color color)
+    private void AppendRoadCaption(int road, Color color, List<string> entireRoad)
     {
         // Gets the length of the truck
         // TODO : Implement length of one road : use the following :
-        // int roadLength = this.graph.GetRoadDistance(road);
+        int roadLength = this.graph.GetRoadDistance(entireRoad);
 
         // Create a pen and an elipse to draw the truck information, then add it to the truck panel
         Pen pen = new Pen(color, STANDARD_OBJECT_WIDTH);
         Rectangle rectangle = new Rectangle(10, labelOffsetY + 10, STANDARD_OBJECT_WIDTH * 4, STANDARD_OBJECT_WIDTH * 4);
 
-        String truckString = "Truck" + road + " - Length : TODO";
+        String truckString = "Truck" + road + " - " + roadLength;
         Font font = new Font("Arial", 10);
         Brush brush = new SolidBrush(Color.Black);
         Point point = new Point(30, labelOffsetY + 8);

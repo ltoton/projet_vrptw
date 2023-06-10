@@ -47,9 +47,12 @@ namespace VRPTW.Services
             road2.Insert(pos2, c1);
         }
 
-        public static void Reverse(this VrptwGraph graph, int r)
+        public static void Reverse(this VrptwGraph graph)
         {
-            graph.Roads[r].Reverse();
+            foreach (List<string> road in graph.Roads)
+            {
+                road.Reverse();
+            }
         }
 
         public static void TwoOpt(this VrptwGraph graph, int r, string c)
@@ -59,6 +62,11 @@ namespace VRPTW.Services
             int start = road.IndexOf(c);
             int end = road.IndexOf(c) + 1;
 
+            if (end >= road.Count)
+            {
+                return;
+            }
+
             graph.Exchange(road[start], road[end]);
         }
 
@@ -67,7 +75,7 @@ namespace VRPTW.Services
             List<string> road1 = graph.Roads.First(r => r.Contains(start1));
             if (road1.Contains(start2))
             {
-                throw new InvalidOperationException("Cannot perform Cross-Exchange on ranges from the same road");
+               throw new InvalidOperationException("Cannot perform Cross-Exchange on ranges from the same road");
             }
             List<string> road2 = graph.Roads.First(r => r.Contains(start2));
 
@@ -158,14 +166,41 @@ namespace VRPTW.Services
             return graphs;
         }
 
-        public static List<VrptwGraph> GetReverseNeighbours(this VrptwGraph graph, int n)
+        public static List<VrptwGraph> GetReverseNeighbours(this VrptwGraph graph)
         {
-            return new();
+            VrptwGraph newGraph = graph.DeepClone();
+            newGraph.Reverse();
+            Console.WriteLine("Nouveau voisin trouvé");
+            return new List<VrptwGraph> { newGraph };
         }
 
         public static List<VrptwGraph> GetTwoOptNeighbours(this VrptwGraph graph, int n)
         {
-            return new();
+            List<VrptwGraph> graphs = new();
+            foreach (List<string> road in graph.Roads)
+            {
+                foreach (string c in road)
+                {
+                    try
+                    {
+                        VrptwGraph newGraph = graph.DeepClone();
+                        newGraph.TwoOpt(graph.Roads.IndexOf(road), c);
+                        graphs.Add(newGraph);
+                        Console.WriteLine("Nouveau voisin trouvé");
+
+                        if (graphs.Count == n)
+                        {
+                            return graphs;
+                        }
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        Console.WriteLine(e.Message);
+                        continue;
+                    }
+                }
+            }
+            return graphs;
         }
 
         public static List<VrptwGraph> GetCrossExchangeNeighbours(this VrptwGraph graph, int n)

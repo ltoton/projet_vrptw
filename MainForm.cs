@@ -18,7 +18,7 @@ public partial class MainForm : Form
         this.truckPanelGraphics = this.panel1.CreateGraphics();
         this.ClearCanvas();
         this.graph.GenerateInitialSolution();
-        this.DrawGraph(this.graph);
+        this.DrawGraph(this.graph, true);
     }
 
     private void generateOneSolution_Click(object sender, EventArgs e)

@@ -100,7 +100,7 @@ public class VrptwGraph
                     neighbours.AddRange(this.GetExchangeNeighbours(n / methods.Count));
                     break;
                 case NeighboursMethods.Reverse:
-                    neighbours.AddRange(this.GetReverseNeighbours(n / methods.Count));
+                    neighbours.AddRange(this.GetReverseNeighbours());
                     break;
                 case NeighboursMethods.Two_Opt:
                     neighbours.AddRange(this.GetTwoOptNeighbours(n / methods.Count));
