@@ -1,4 +1,5 @@
-﻿using VRPTW.Services;
+﻿using System.Diagnostics;
+using VRPTW.Services;
 using VRPTW.Utils;
 
 namespace VRPTW.Model;
@@ -85,15 +86,16 @@ public class VrptwGraph
         return graph;
     }
 
-    public VrptwGraph GetNeighbour(List<NeighboursMethods>? methods = default)
+    public (VrptwGraph, NeighboursMethods) GetNeighbour(List<NeighboursMethods>? methods = default)
     {
         int currentDistance = this.GetTotalDistance();
         methods = methods ?? this.AllNeighboursMethods();
         VrptwGraph neighbour = null;
         var temp_methods = methods.DeepClone();
+        NeighboursMethods method = NeighboursMethods.Exchange;
         while (temp_methods.Count > 0)
         {
-            NeighboursMethods method = temp_methods.OrderBy(m => Guid.NewGuid()).First();
+            method = temp_methods.OrderBy(m => Guid.NewGuid()).First();
             temp_methods.Remove(method);
             switch (method)
             {
@@ -115,10 +117,10 @@ public class VrptwGraph
             }
             if (neighbour != null)
             {
-                return neighbour;
+                return (neighbour, method);
             }
         }
-        return null;
+        return (null, method);
     }
 
     private List<NeighboursMethods> AllNeighboursMethods()
@@ -140,21 +142,54 @@ public class VrptwGraph
 
     #region Meta-heuristique
 
-    public static VrptwGraph HillClimbing(VrptwGraph graph, List<NeighboursMethods>? neighboursMethods = null, bool stepByStep = false)
+    public static VrptwGraph HillClimbing(VrptwGraph graph, List<NeighboursMethods>? neighboursMethods = null, bool export = false)
     {
         neighboursMethods ??= new() { NeighboursMethods.Relocate };
-        VrptwGraph neighbour = graph.GetNeighbour(neighboursMethods);
-        if (neighbour == null)
+        int k = 0;
+        List<int> distances = new();
+        List<NeighboursMethods> usedOperators = new();
+        List<int> nbVehicules = new();
+        List<long> timesToFindNeighbour = new();
+        Stopwatch timer = new();
+        timer.Start();
+        (VrptwGraph neighbour, NeighboursMethods method) neighbour = graph.GetNeighbour(neighboursMethods);
+        timesToFindNeighbour.Add(timer.ElapsedMilliseconds);
+        if (neighbour.neighbour == null)
         {
             return graph;
         }
         do
         {
-            graph = CheckAndDeleteEmptyRoads(neighbour);
+            graph = CheckAndDeleteEmptyRoads(neighbour.neighbour);
+            k++;
+            distances.Add(graph.GetTotalDistance());
+            usedOperators.Add(neighbour.method);
+            nbVehicules.Add(graph.Roads.Count);
+            timer.Restart();
             neighbour = graph.GetNeighbour(neighboursMethods);
+            timesToFindNeighbour.Add(timer.ElapsedMilliseconds);
         }
-        while (neighbour != null && !stepByStep);
+        while (neighbour.neighbour != null);
+        if (export)
+        {
+            // export the number of iteration and the evolution of the distance and the list of used operators
+            exportDatas(graph.Name, k, distances, usedOperators, nbVehicules, timesToFindNeighbour);
+        }
         return graph;
+    }
+
+    private static void exportDatas(string name, int k, List<int> distances, List<NeighboursMethods> usedOperators, List<int> nbVehicules, List<long> times)
+    {
+        string path = $"./export/hill-climbing/{new string(name.SkipLast(4).ToArray())}_{DateTime.Now:dd-MM-yyyy-HH-mm}.csv";
+        // create the directory if it doesn't exist
+        Directory.CreateDirectory(Path.GetDirectoryName(path));
+        using StreamWriter sw = new(path);
+        sw.WriteLine("iteration,distance,operator,nbVehicules,timeToFindNeighbour");
+        for (int i = 0; i < k; i++)
+        {
+            sw.WriteLine($"{i},{distances[i]},{usedOperators[i]},{nbVehicules[i]},{times[i]}");
+        }
+        Console.WriteLine($"Exported in {path}");
     }
 
     public static VrptwGraph SimulatedAnealing(VrptwGraph graph, List<NeighboursMethods>? neighboursMethods = null)
@@ -170,7 +205,7 @@ public class VrptwGraph
 
         for (int iteration = 0; iteration < maxIteration; iteration++)
         {
-            VrptwGraph neighbour = currentSolution.GetNeighbour(neighboursMethods);
+            VrptwGraph neighbour = currentSolution.GetNeighbour(neighboursMethods).Item1;
             if (neighbour == null)
             {
                 return currentSolution;
@@ -200,7 +235,7 @@ public class VrptwGraph
         int k = 0;
         for (int i = 0; i < nbIteration; i++)
         {
-            var sn = s.GetNeighbour();
+            var sn = s.GetNeighbour().Item1;
             var en = sn.GetTotalDistance();
             if (en > e)
             {

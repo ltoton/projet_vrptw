@@ -36,7 +36,7 @@ public partial class MainForm : Form
     {
         this.generateOneSolutionButton.Enabled = false;
         this.generateNbSolutionsButton.Enabled = false;
-        this.graph = VrptwGraph.HillClimbing(this.graph, this.GetListOfRelocator());
+        this.graph = VrptwGraph.HillClimbing(this.graph, this.GetListOfRelocator(), true);
         this.ClearCanvas();
         this.DrawGraph(this.graph);
         this.generateNbSolutionsButton.Enabled = true;
