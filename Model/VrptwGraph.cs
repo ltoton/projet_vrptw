@@ -85,32 +85,40 @@ public class VrptwGraph
         return graph;
     }
 
-    public List<VrptwGraph> GetNeighbours(int n, List<NeighboursMethods>? methods = default)
+    public VrptwGraph GetNeighbour(List<NeighboursMethods>? methods = default)
     {
+        int currentDistance = this.GetTotalDistance();
         methods = methods ?? this.AllNeighboursMethods();
-        List<VrptwGraph> neighbours = new();
-        foreach (NeighboursMethods method in methods.OrderBy(m => Guid.NewGuid()))
+        VrptwGraph neighbour = null;
+        var temp_methods = methods.DeepClone();
+        while (temp_methods.Count > 0)
         {
+            NeighboursMethods method = temp_methods.OrderBy(m => Guid.NewGuid()).First();
+            temp_methods.Remove(method);
             switch (method)
             {
                 case NeighboursMethods.Relocate:
-                    neighbours.AddRange(this.GetRelocateNeighbours(n / methods.Count));
+                    neighbour = this.GetRelocateNeighbours(currentDistance);
                     break;
                 case NeighboursMethods.Exchange:
-                    neighbours.AddRange(this.GetExchangeNeighbours(n / methods.Count));
+                    neighbour = this.GetExchangeNeighbours(currentDistance);
                     break;
                 case NeighboursMethods.Reverse:
-                    neighbours.AddRange(this.GetReverseNeighbours());
+                    neighbour = this.GetReverseNeighbours(currentDistance);
                     break;
                 case NeighboursMethods.Two_Opt:
-                    neighbours.AddRange(this.GetTwoOptNeighbours(n / methods.Count));
+                    neighbour = this.GetTwoOptNeighbours(currentDistance);
                     break;
                 case NeighboursMethods.CrossExchange:
-                    neighbours.AddRange(this.GetCrossExchangeNeighbours(n / methods.Count));
+                    neighbour = this.GetCrossExchangeNeighbours(currentDistance);
                     break;
             }
+            if (neighbour != null)
+            {
+                return neighbour;
+            }
         }
-        return neighbours;
+        return null;
     }
 
     private List<NeighboursMethods> AllNeighboursMethods()
@@ -124,30 +132,84 @@ public class VrptwGraph
         };
     }
 
-    public static VrptwGraph GetBest(List<VrptwGraph> graphs)
+    public static VrptwGraph GetBest(List<VrptwGraph> graphs, VrptwGraph g)
     {
+        graphs.Add(g);
         return graphs.OrderBy(g => g.GetTotalDistance()).First();
     }
 
     #region Meta-heuristique
 
-    public static VrptwGraph HillClimbing(VrptwGraph graph, List<NeighboursMethods>? neighboursMethods = null, int? nbGeneration = null)
+    public static VrptwGraph HillClimbing(VrptwGraph graph, List<NeighboursMethods>? neighboursMethods = null, bool stepByStep = false)
     {
         neighboursMethods ??= new() { NeighboursMethods.Relocate };
-        while (nbGeneration != 0)
+        VrptwGraph neighbour = graph.GetNeighbour(neighboursMethods);
+        if (neighbour == null)
         {
-            nbGeneration--;
-            var neighbours = graph.GetNeighbours(20, neighboursMethods);
-            if (neighbours.Count > 0)
-            {
-                graph = CheckAndDeleteEmptyRoads(GetBest(neighbours));
-            }
-            else
-            {
-                break;
-            }
+            return graph;
         }
+        do
+        {
+            graph = CheckAndDeleteEmptyRoads(neighbour);
+            neighbour = graph.GetNeighbour(neighboursMethods);
+        }
+        while (neighbour != null && !stepByStep);
         return graph;
+    }
+
+    public static VrptwGraph SimulatedAnealing(VrptwGraph graph, List<NeighboursMethods>? neighboursMethods = null)
+    {
+        neighboursMethods ??= new() { NeighboursMethods.Relocate };
+        VrptwGraph currentSolution = graph.DeepClone();
+        VrptwGraph bestSolution = graph.DeepClone();
+        double coolingRate = 0.8;
+        int maxIteration = 1000;
+        double currentTemperature = GetInitialeTemperature(graph, maxIteration);
+        Random random = new();
+        double currentDistance = currentSolution.GetTotalDistance();
+
+        for (int iteration = 0; iteration < maxIteration; iteration++)
+        {
+            VrptwGraph neighbour = currentSolution.GetNeighbour(neighboursMethods);
+            if (neighbour == null)
+            {
+                return currentSolution;
+            }
+            double neighbourDistance = neighbour.GetTotalDistance();
+            if (neighbourDistance < currentDistance || Math.Exp((currentDistance - neighbourDistance) / currentTemperature) > random.NextDouble())
+            {
+                currentSolution = neighbour;
+                currentDistance = neighbourDistance;
+            }
+            if (neighbourDistance < bestSolution.GetTotalDistance())
+            {
+                bestSolution = neighbour;
+            }
+            currentTemperature *= coolingRate;
+            Console.WriteLine($"Iteration {iteration} : {currentSolution.GetTotalDistance()}");
+        }
+        return bestSolution;
+    }
+
+    private static double GetInitialeTemperature(VrptwGraph graph, int nbIteration)
+    {
+        int sumDiffLess = 0;
+        int nbLess = 0;
+        var s = graph.DeepClone();
+        int e = graph.GetTotalDistance();
+        int k = 0;
+        for (int i = 0; i < nbIteration; i++)
+        {
+            var sn = s.GetNeighbour();
+            var en = sn.GetTotalDistance();
+            if (en > e)
+            {
+                sumDiffLess += en - e;
+                nbLess++;
+            }
+            k++;
+        }
+        return (-sumDiffLess / nbLess) / Math.Log(0.8);
     }
 
     #endregion

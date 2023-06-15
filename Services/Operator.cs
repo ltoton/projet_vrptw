@@ -47,12 +47,9 @@ namespace VRPTW.Services
             road2.Insert(pos2, c1);
         }
 
-        public static void Reverse(this VrptwGraph graph)
+        public static void Reverse(this VrptwGraph graph, int r)
         {
-            foreach (List<string> road in graph.Roads)
-            {
-                road.Reverse();
-            }
+            graph.Roads[r].Reverse();
         }
 
         public static void TwoOpt(this VrptwGraph graph, int r, string c)
@@ -60,11 +57,11 @@ namespace VRPTW.Services
             List<string> road = graph.Roads[r];
 
             int start = road.IndexOf(c);
-            int end = road.IndexOf(c) + 1;
+            int end = road.IndexOf(c) + 2;
 
             if (end >= road.Count)
             {
-                return;
+                throw new InvalidOperationException("Cannot perform Two-Opt on the 2 last clients of a road");
             }
 
             graph.Exchange(road[start], road[end]);
@@ -75,7 +72,7 @@ namespace VRPTW.Services
             List<string> road1 = graph.Roads.First(r => r.Contains(start1));
             if (road1.Contains(start2))
             {
-               throw new InvalidOperationException("Cannot perform Cross-Exchange on ranges from the same road");
+                throw new InvalidOperationException("Cannot perform Cross-Exchange on ranges from the same road");
             }
             List<string> road2 = graph.Roads.First(r => r.Contains(start2));
 
@@ -105,9 +102,8 @@ namespace VRPTW.Services
 
         #region Neighbours
 
-        public static List<VrptwGraph> GetRelocateNeighbours(this VrptwGraph graph, int n)
+        public static VrptwGraph GetRelocateNeighbours(this VrptwGraph graph, int distance)
         {
-            List<VrptwGraph> graphs = new();
             foreach (Client c in graph.Clients)
             {
                 for (int r = 0; r < graph.Roads.Count; r++)
@@ -118,28 +114,24 @@ namespace VRPTW.Services
                         {
                             VrptwGraph newGraph = graph.DeepClone();
                             newGraph.Relocate(c.Id, r, i);
-                            graphs.Add(newGraph);
-                            Console.WriteLine("Nouveau voisin trouvé");
-
-                            if (graphs.Count == n)
+                            if (newGraph.GetTotalDistance() < distance)
                             {
-                                return graphs;
+                                Console.WriteLine($"Nouveau voisin trouvé avec une fitness de {newGraph.GetTotalDistance()}");
+                                return newGraph;
                             }
                         }
                         catch (InvalidOperationException e)
                         {
-                            Console.WriteLine(e.Message);
-                            continue;
+                            //Console.WriteLine(e.Message);
                         }
                     }
                 }
             }
-            return graphs;
+            return null;
         }
 
-        public static List<VrptwGraph> GetExchangeNeighbours(this VrptwGraph graph, int n)
+        public static VrptwGraph GetExchangeNeighbours(this VrptwGraph graph, int distance)
         {
-            List<VrptwGraph> graphs = new();
             foreach (Client c1 in graph.Clients)
             {
                 foreach (Client c2 in graph.Clients)
@@ -148,35 +140,45 @@ namespace VRPTW.Services
                     {
                         VrptwGraph newGraph = graph.DeepClone();
                         newGraph.Exchange(c1.Id, c2.Id);
-                        graphs.Add(newGraph);
-                        Console.WriteLine("Nouveau voisin trouvé");
-
-                        if (graphs.Count == n)
+                        if (newGraph.GetTotalDistance() < distance)
                         {
-                            return graphs;
+                            Console.WriteLine($"Nouveau voisin trouvé avec une fitness de {newGraph.GetTotalDistance()}");
+                            return newGraph;
                         }
                     }
                     catch (InvalidOperationException e)
                     {
-                        Console.WriteLine(e.Message);
-                        continue;
+                        //Console.WriteLine(e.Message);
                     }
                 }
             }
-            return graphs;
+            return null;
         }
 
-        public static List<VrptwGraph> GetReverseNeighbours(this VrptwGraph graph)
+        public static VrptwGraph GetReverseNeighbours(this VrptwGraph graph, int distance)
         {
-            VrptwGraph newGraph = graph.DeepClone();
-            newGraph.Reverse();
-            Console.WriteLine("Nouveau voisin trouvé");
-            return new List<VrptwGraph> { newGraph };
+            for (int r = 0; r < graph.Roads.Count; r++)
+            {
+                try
+                {
+                    VrptwGraph newGraph = graph.DeepClone();
+                    newGraph.Reverse(r);
+                    if (newGraph.GetTotalDistance() < distance)
+                    {
+                        Console.WriteLine($"Nouveau voisin trouvé avec une fitness de {newGraph.GetTotalDistance()}");
+                        return newGraph;
+                    }
+                }
+                catch (InvalidOperationException e)
+                {
+                    //Console.WriteLine(e.Message);
+                }
+            }
+            return null;
         }
 
-        public static List<VrptwGraph> GetTwoOptNeighbours(this VrptwGraph graph, int n)
+        public static VrptwGraph GetTwoOptNeighbours(this VrptwGraph graph, int distance)
         {
-            List<VrptwGraph> graphs = new();
             foreach (List<string> road in graph.Roads)
             {
                 foreach (string c in road)
@@ -185,27 +187,60 @@ namespace VRPTW.Services
                     {
                         VrptwGraph newGraph = graph.DeepClone();
                         newGraph.TwoOpt(graph.Roads.IndexOf(road), c);
-                        graphs.Add(newGraph);
-                        Console.WriteLine("Nouveau voisin trouvé");
-
-                        if (graphs.Count == n)
+                        if (newGraph.GetTotalDistance() < distance)
                         {
-                            return graphs;
+                            Console.WriteLine($"Nouveau voisin trouvé avec une fitness de {newGraph.GetTotalDistance()}");
+                            return newGraph;
                         }
                     }
                     catch (InvalidOperationException e)
                     {
-                        Console.WriteLine(e.Message);
-                        continue;
+                        //Console.WriteLine(e.Message);
                     }
                 }
             }
-            return graphs;
+            return null;
         }
 
-        public static List<VrptwGraph> GetCrossExchangeNeighbours(this VrptwGraph graph, int n)
+        public static VrptwGraph GetCrossExchangeNeighbours(this VrptwGraph graph, int distance)
         {
-            return new();
+            for (int r1 = 0; r1 < graph.Roads.Count; r1++)
+            {
+                for (int r2 = 0; r2 < graph.Roads.Count; r2++)
+                {
+                    if (r1 == r2)
+                    {
+                        continue;
+                    }
+                    for (int i = 0; i < graph.Roads[r1].Count; i++)
+                    {
+                        for (int j = 0; j < graph.Roads[r2].Count; j++)
+                        {
+                            for (int l1 = 1; l1 < graph.Roads[r1].Count - i; l1++)
+                            {
+                                for (int l2 = 1; l2 < graph.Roads[r2].Count - j; l2++)
+                                {
+                                    try
+                                    {
+                                        VrptwGraph newGraph = graph.DeepClone();
+                                        newGraph.CrossExchange(graph.Roads[r1][i], graph.Roads[r2][j], l1, l2);
+                                        if (newGraph.GetTotalDistance() < distance)
+                                        {
+                                            Console.WriteLine($"Nouveau voisin trouvé avec une fitness de {newGraph.GetTotalDistance()}");
+                                            return newGraph;
+                                        }
+                                    }
+                                    catch (InvalidOperationException e)
+                                    {
+                                        //Console.WriteLine(e.Message);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
         }
 
         #endregion

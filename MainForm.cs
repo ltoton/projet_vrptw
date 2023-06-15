@@ -25,7 +25,7 @@ public partial class MainForm : Form
     {
         this.generateOneSolutionButton.Enabled = false;
         this.generateNbSolutionsButton.Enabled = false;
-        this.graph = VrptwGraph.HillClimbing(this.graph, this.GetListOfRelocator(), 1);
+        this.graph = VrptwGraph.SimulatedAnealing(this.graph, this.GetListOfRelocator());
         this.ClearCanvas();
         this.DrawGraph(this.graph);
         this.generateNbSolutionsButton.Enabled = true;
@@ -36,7 +36,7 @@ public partial class MainForm : Form
     {
         this.generateOneSolutionButton.Enabled = false;
         this.generateNbSolutionsButton.Enabled = false;
-        this.graph = VrptwGraph.HillClimbing(this.graph, this.GetListOfRelocator(), Int16.Parse(generationNbInput.Text));
+        this.graph = VrptwGraph.HillClimbing(this.graph, this.GetListOfRelocator());
         this.ClearCanvas();
         this.DrawGraph(this.graph);
         this.generateNbSolutionsButton.Enabled = true;
